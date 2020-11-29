@@ -1,0 +1,54 @@
+Package: varppRule
+Type: Package
+Title: Variant Prioritisation and Predictive Rule Modelling for rare and other genetic disorders
+Version: 0.1.0
+Authors@R: c(person("Sebastian", "Rauschert",
+    email = "Sebastian.Rauschert@telethonkids.org.au", role = c("aut", "cre")),
+    person("Denise", "Anderson",
+    email = "Denise.Anderson@telethonkids.org.au", role = c("aut")))
+Maintainer: Sebastian Rauschert <Sebastian.Rauschert@telethonkids.org.au>
+Description: This package is an extension of the VARPP (https://github.com/deniando/VARPP) model. Whole genome and exome sequencing are now standard tools in the diagnostic process of 
+    patients suffering from rare and other genetic disorders. The bottleneck for succesfull diagnosis is finding the disease causing variants amongst tens of thousands of genetic variants returned
+    by such tests. One step in this process is to pre-filter the variants based on known benign/non-disease causing variants.  
+    This package, similar to the original VARPP code, focuses on the task of prioritising variants in respect to the observed disease phenotype(s), after applying the pre-filtering step.  
+    This package links gene expression across multiple tissues and cell types to the phenotypes, hence the name (VAR)iant (P)rioritisation by (P)henotype. It can prioritise potential disease causing
+    variants in a personalised manner.
+    On top of the original task of prioritising variants, this version 2 of VARPP also returns a set of Rules that led to the prioritisation of the variants. This is based on the work by Fiedman
+    and Popescu (Friedman JH, Popescu BE. Predictive learning via rule ensembles. The Annals of Applied Statistics. 2008;2(3):916-54.).
+License: GPL-3 + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: R (>= 3.5.0)
+Imports:
+   ranger,
+   glmnet,
+   doMC,
+   doParallel,
+   parallel,
+   foreach,
+   tidyverse,
+   precrec,
+   data.table,
+   caret,
+   tidypredict,
+   progress,
+   DMwR,
+   stringr,
+   dplyr,
+   magrittr,
+   plyr,
+   iterators,
+   lattice,
+   grid,
+   ggplot2,
+   precrec,
+   rmarkdown,
+   knitr,
+   plotly,
+   DT,
+   pander,
+   lubridate,
+   pROC,
+   tidyr,
+   tidyselect (>= 1.1.0)
+RoxygenNote: 7.1.1

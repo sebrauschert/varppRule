@@ -1,0 +1,219 @@
+---
+github: "Hobbeist"
+output: 
+  html_document:
+    toc: no
+    self_contained: yes
+    toc_float: no
+    template: resources/template_varpp.html
+    css: resources/html_report.css
+logo: varpp-logo.png
+params:
+  variants: NA
+  rf_vars: NA
+  rulefit_vars: NA
+  all_res: NA
+  rules: NA
+  expression: NA
+  path_file: NA
+  ben_file: NA
+  gtex_hcl: NA
+  ntree: NA
+  maxdepth: NA
+  SMOTE: NA
+  RF_results: NA
+  RuleFit_results: NA
+  RF_roc: NA
+  RF_prc: NA
+  RuleFit_roc: NA
+  RuleFit_prc: NA
+  time_taken: NA
+  auprcpp100: NA
+  bootstrap_rounds: NA
+  HPO_term_name: NA
+  kappa_plot: NA
+  data_dimensions: NA
+  rules_before_filtering: NA
+  rules_after_filtering: NA
+  memory_usage: NA
+
+title: "VARPP-RuleFit Analysis Report for HP term: [`r params$HPO_term_name`](`r paste0('https://hpo.jax.org/app/browse/term/',params$HPO_term_name)`)"
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(lubridate)
+library(varppRuleFit)
+library(knitr)
+library(DT)
+```
+
+# {.tabset .tabset-fade}
+
+
+<p align="center">
+<img src="varpp-logo.png"  width="20%" height="20%">
+</p>
+
+<br></br>
+
+***
+
+<br></br>
+
+
+## Predicted Variants 
+
+These are the variants that were predicted as being `pathogenic` by `varppRuleFit`. Predictions are reported from  `Random Forest`, `RuleFit` and the `CADD rank score`.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$all_res
+```
+
+
+
+## Prediction Rules
+
+These are the identified rules that lead to the prediction of pathogenic variants. Cohen's $\kappa$ is reported and the rules are sorted based on this value.   
+
+<blockquote>The $\kappa$ statistic is a measure of how closely the GeneVariants classified as pathogenic match the data labeled as ground truth (as queried via`dbNSFP` and `phenolyzer`), controlling for the accuracy of a random classifier as measured by the expected accuracy.
+</blockquote>
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$rules
+```
+
+## auPRC and PP100
+
+As per [Anderson, D., Baynam, G., Blackwell, J.M. et al. Personalised analytics for rare disease diagnostics. Nat Commun 10, 5274 (2019). https://doi.org/10.1038/s41467-019-13345-5](https://www.nature.com/articles/s41467-019-13345-5)  
+
+<blockquote>The R `precrec` package [is] used to calculate the area under the precision-recall curve (`auPRC`) based on the interpolation method of Davis & Goadrich. [...][the] focus [is] on the auPRC rather than the area under the receiver operating characteristic curve (auROC), due to the inherently imbalanced ratio of pathogenic to benign variants. In addition to the auPRC, [...] the proportion of true pathogenic variants (i.e. ClinVar pathogenic variants) in the top 100 predictions of pathogenicity (referred to as PP100 [...]) [is calculated]. This measure focuses on the top ranked variants as these are more likely to be considered for follow-up.</blockquote>  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$auprcpp100
+```
+
+## Prediction Measures {.tabset .tabset-pills .tabset-fade}
+
+Here are several different model quality measures as assessed against the "ground truth" from `dbNSFP` and `phenolyzer`.
+
+### Random Forest prediction
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RF_results
+```
+
+### RuleFit prediction
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RuleFit_results
+```
+
+## Curves {.tabset .tabset-pills .tabset-fade}
+
+### Random Forest {.tabset .tabset-pills .tabset-fade}
+
+#### Receiver operatting characteristic (`ROC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RF_roc
+```
+
+#### Precision-Recall (`PRC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RF_prc
+```
+
+### RuleFit {.tabset .tabset-pills .tabset-fade}
+
+#### Receiver operatting characteristic (`ROC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RuleFit_roc
+```
+
+#### Precision-Recall (`PRC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RuleFit_prc
+```
+
+## Kappa plot for Rules
+
+The pre-selection criteria for rules before LASSO is initiated is >=0.05.  
+This plot shows the sorted Cohen's $\kappa$ value and the cut-off line of 0.05.  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+plot(sort(params$kappa_plot), ylab="Cohen's Kappa", xlab="Rules, sorted by Cohen's Kappa")
+abline(h=0.05, col="red")
+```
+
+## Memory Usage
+This is the memory usage, mostly of the LASSO step. The memory is summed across all parallel loops for LASSO, to get a picture of memory used in parallel.
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.width=15, fig.height=5}
+ggplotly(
+    params$memory_usage %>%
+      dplyr::group_by(process_stage) %>%
+      dplyr::summarize(Mean = sum(memory, na.rm=TRUE), Time = mean(lubridate:: ymd_hms(time))) %>%
+      ggplot(aes(x = Time, y = Mean, group = 1)) + geom_point(aes(fill = process_stage)) +
+      geom_line() + theme_minimal() + ylab("Memory (MB)") +
+      xlab("Time Checkpoint"))
+```
+
+
+## Run info
+<details>
+  <summary>Click to expand runinfo</summary>
+  
+__Expression file:__   
+`r params$expression`    
+
+__Pathogenic variant file:__     
+`r params$path_file`  
+
+__Benign variant file:__     
+`r params$ben_file`   
+
+__Expression type:__     
+`r params$gtex_hcl`    
+
+__`ntree`:__     
+`r params$ntree`    
+
+__`max.depth`:__     
+`r params$maxdepth`  
+
+__Number of models in`LASSO` ensemble:__    
+`r params$bootstrap_rounds`
+
+__Synthetic Minority oversampling technique (`SMOTE`)used:__    
+`r params$SMOTE`   
+
+__Modelling time:__    
+`r params$time_taken`
+
+</details>
+
+## Data info
+
+__Data dimensions:__  
+`r params$data_dimensions`
+
+__Number of rules: pre-filtering:__  
+`r params$rules_before_filtering`  
+
+__Number of rules: post-filtering:__  
+`r params$rules_after_filtering`
+
+## R Session Info
+<details>
+  <summary>Click to expand session info</summary>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(pander)
+pander(sessionInfo(), compact = FALSE)
+```
+</summary>

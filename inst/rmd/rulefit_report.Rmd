@@ -1,0 +1,227 @@
+---
+github: "Hobbeist"
+output: 
+  html_document:
+    toc: no
+    self_contained: yes
+    toc_float: no
+    template: resources/template_varpp.html
+    css: resources/html_report.css
+logo: varpp-logo.png
+params:
+  variants: NA
+  rf_vars: NA
+  rulefit_vars: NA
+  all_res: NA
+  rules: NA
+  ntree: NA
+  maxdepth: NA
+  RF_results: NA
+  RuleFit_results: NA
+  RF_roc: NA
+  RF_prc: NA
+  RuleFit_roc: NA
+  RuleFit_prc: NA
+  time_taken: NA
+  auprcpp100: NA
+  bootstrap_rounds: NA
+  HPO_term_name: NA
+  kappa_plot: NA
+  data_dimensions: NA
+  rules_before_filtering: NA
+  rules_after_filtering: NA
+  patho_ratio: NA
+  missclass_patho: NA
+  density_plot: NA
+title: "RuleFit Analysis Report for: [`r params$HPO_term_name`](`r paste0('https://hpo.jax.org/app/browse/term/',params$HPO_term_name)`)"
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(lubridate)
+library(varppRuleFit)
+library(knitr)
+library(DT)
+```
+
+# {.tabset .tabset-fade}
+
+
+<p align="center">
+<img src="varpp-logo.png"  width="20%" height="20%">
+</p>
+
+<br></br>
+
+***
+
+<br></br>
+
+
+## Predicted Variants 
+
+These are the predictions based on `varppRuleFit`. Predictions are reported from  `Random Forest` and `RuleFit`.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$all_res
+```
+
+
+
+## Prediction Rules {.tabset .tabset-fade}
+
+### Predictions
+The coefficient is the average coefficient over all `LASSO` models in the `LASSO` ensemble.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$rules
+```
+
+### Density plot
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$density_plot
+```
+
+### Ratio Plot
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplotly(
+params$patho_ratio)
+```
+
+### Misclassified positives
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$missclass_patho
+```
+
+## auPRC and PP100
+
+As per [Anderson, D., Baynam, G., Blackwell, J.M. et al. Personalised analytics for rare disease diagnostics. Nat Commun 10, 5274 (2019). https://doi.org/10.1038/s41467-019-13345-5](https://www.nature.com/articles/s41467-019-13345-5)  
+
+<blockquote>The R `precrec` package [is] used to calculate the area under the precision-recall curve (`auPRC`) based on the interpolation method of Davis & Goadrich. [...][the] focus [is] on the auPRC rather than the area under the receiver operating characteristic curve (auROC), due to the inherently imbalanced ratio of pathogenic to benign variants. In addition to the auPRC, [...] the proportion of true pathogenic variants (i.e. ClinVar pathogenic variants) in the top 100 predictions of pathogenicity (referred to as PP100 [...]) [is calculated]. This measure focuses on the top ranked variants as these are more likely to be considered for follow-up.</blockquote>  
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$auprcpp100
+```
+
+## Prediction Measures {.tabset .tabset-pills .tabset-fade}
+
+Here are several different model quality measures as assessed against the "ground truth", meaning the known outcome.
+
+### Random Forest prediction
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RF_results
+```
+
+### RuleFit prediction
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RuleFit_results
+```
+
+## Curves {.tabset .tabset-pills .tabset-fade}
+
+### Random Forest {.tabset .tabset-pills .tabset-fade}
+
+#### Receiver operatting characteristic (`ROC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RF_roc
+```
+
+#### Precision-Recall (`PRC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RF_prc
+```
+
+### RuleFit {.tabset .tabset-pills .tabset-fade}
+
+#### Receiver operatting characteristic (`ROC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RuleFit_roc
+```
+
+#### Precision-Recall (`PRC`)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+params$RuleFit_prc
+```
+
+## Kappa plot for Rules
+
+This plot shows the sorted Cohen's $\kappa$ values and the rule numbers. 
+
+```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
+#plot(sort(params$kappa_plot), ylab="Cohen's Kappa", xlab="Rules, sorted by Cohen's Kappa")
+#abline(h=0.05, col="red")
+
+TEST       <- data.frame(params$kappa_plot)
+TEST$index <- c(1: dim(TEST)[1])
+
+f <- list(
+  family = "Courier New, monospace",
+  size = 18,
+  color = "#7f7f7f"
+)
+x <- list(
+  title = "",
+  titlefont = f
+)
+y <- list(
+  title = "Kappa",
+  titlefont = f
+)
+
+suppressMessages(plotly::plot_ly(data = TEST, 
+                x = ~index, 
+                y = ~params$kappa_plot,
+                # Hover text:
+  text = ~paste("Kappa: ", params$kappa_plot, "<br>Rule: ", rownames(TEST))) %>% 
+  layout(xaxis = x, yaxis = y))
+
+```
+
+
+## Run info
+<details>
+  <summary>Click to expand runinfo</summary>
+
+__`ntree`:__     
+`r params$ntree`    
+
+__`max.depth`:__     
+`r params$maxdepth`  
+
+__Number of models in`LASSO` ensemble:__    
+`r params$bootstrap_rounds`
+
+__Modelling time:__    
+`r params$time_taken`
+
+</details>
+
+## Data info
+
+__Data dimensions:__  
+`r params$data_dimensions`
+
+__Number of rules: pre-filtering:__  
+`r params$rules_before_filtering`  
+
+__Number of rules: post-filtering:__  
+`r params$rules_after_filtering`
+
+## R Session Info
+<details>
+  <summary>Click to expand session info</summary>
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(pander)
+pander(sessionInfo(), compact = FALSE)
+```
+</summary>
