@@ -19,11 +19,11 @@ varpp_report <- function(results,
                          report_filename) {
 
     gene_var       <- names(results$RuleFit$accuracy)[1]
-    table_function <- auPRC_table
 
     # Specify the outcome variable
-     y = "Pathogenic"
+    y = results$y
 
+    if(results$ranger.and.rulefit == TRUE){
       table_function <- auPRC_table
 
       # Pathogenic Variants: Specify for the score to be above 0.5, which means more than 50% of the predictions classified the variant as pathogenic.
@@ -32,11 +32,32 @@ varpp_report <- function(results,
         rename(RandomForestScore = rf_results) %>%
         rename(RuleFitScore = CADD_expression) %>%
         filter(!RuleFitScore %in% NA)
+        #filter(RuleFitScore > .threshold(results$RuleFit$accuracy[,2], results$RuleFit$accuracy[,3]))
 
-      DATA_all <- results$RuleData$dat[,c(2,3,grep("rule",names(results$RuleData$dat)))]
+    }else{
+
+      table_function <- performance
+
+      # Pathogenic Variants: Specify for the score to be above 0.5, which means more than 50% of the predictions classified the variant as pathogenic.
+      all_res <- results$RuleFit$accuracy[,c(gene_var,y, "CADD_expression", "CADD_raw_rankscore")]
+      all_res <- all_res %>%
+        rename(RuleFitScore = CADD_expression) %>%
+        filter(RuleFitScore > .threshold(results$RuleFit$accuracy[,2], results$RuleFit$accuracy[,3]))
+
+    }
 
 
 
+    if(results$two_level_bootstrap %in% FALSE){
+    # Create a data set to show the ratio of predicted classes in the rules versus actual classes
+    DATA_all <- results$RuleData[,c(1,2,grep("rule",names(results$RuleData)))]
+
+    }else{
+
+      DATA_all <- results$RuleData[,c(2,3,grep("rule",names(results$RuleData)))]
+
+
+    }
     # Create a data table element with all the pathogenic Variants, that neither of the rules was able to classify as pathogenic
     DATA_patho <- DATA_all %>%
       filter(get(y) %in% 1)

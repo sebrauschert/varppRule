@@ -113,31 +113,12 @@ params$auprcpp100
 
 Here are several different model quality measures as assessed against the "ground truth", meaning the known outcome.
 
-### Random Forest prediction
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-params$RF_results
-```
-
 ### RuleFit prediction
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 params$RuleFit_results
 ```
 
 ## Curves {.tabset .tabset-pills .tabset-fade}
-
-### Random Forest {.tabset .tabset-pills .tabset-fade}
-
-#### Receiver operatting characteristic (`ROC`)
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-params$RF_roc
-```
-
-#### Precision-Recall (`PRC`)
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-params$RF_prc
-```
 
 ### RuleFit {.tabset .tabset-pills .tabset-fade}
 

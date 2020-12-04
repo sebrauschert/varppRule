@@ -1,4 +1,4 @@
-#'varpp_plus: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab
+#'varpp: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab
 #'
 #' @param dat this is a data list returned from the function load_gtex_or_hcl. It is either GTEx tissue specific gene expression or HCL cell specific expression
 #' @param ntree is the number of trees that should be built for ranger. It defaults to 1000
@@ -14,6 +14,7 @@
 #' @importFrom iterators icount
 #' @export
 varpp <- function(dat,
+                  y,
                   ntree,
                   max.depth,
                   cores){
@@ -21,8 +22,8 @@ varpp <- function(dat,
 
 
   # Spedify the benign and pathogenic gene names
-  cls_pathogenic_genes = unique(dat$dat$Gene[dat$dat$Pathogenic %in% 1])
-  cls_benign_genes     = unique(dat$dat$Gene[dat$dat$Pathogenic %in% 0])
+  cls_pathogenic_genes = unique(dat$dat$Gene[dat$dat[,y] %in% 1])
+  cls_benign_genes     = unique(dat$dat$Gene[dat$dat[,y] %in% 0])
 
   #=====================================================================================
   # SET UP RESULTS TABLE
@@ -32,14 +33,14 @@ varpp <- function(dat,
   rf_trees <- list()
 
   rf_trees$rf_results <- data.frame(
-    bind_rows(dat$disease_variants[ , c("GeneVariant","Pathogenic")], dat$benign_variants[ , c("GeneVariant","Pathogenic")]),
+    bind_rows(dat$disease_variants[ , c("GeneVariant",y)], dat$benign_variants[ , c("GeneVariant",y)]),
     predictNum=vector(length=nrow(dat$disease_variants) + nrow(dat$benign_variants), mode="numeric"),
     predictDenom=vector(length=nrow(dat$disease_variants) + nrow(dat$benign_variants), mode="numeric"))
 
   rf_trees$rf_results_varimp <- data.frame(
-    Variable=c("CADD_raw_rankscore", colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", "Pathogenic", "CADD_raw_rankscore")]),
-    sumVarimp=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", "Pathogenic", "CADD_raw_rankscore")]) + 1, mode="numeric"),
-    ntree=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in%  c("Gene", "GeneVariant", "Pathogenic", "CADD_raw_rankscore")]) + 1, mode="numeric"),
+    Variable=c("CADD_raw_rankscore", colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", y, "CADD_raw_rankscore")]),
+    sumVarimp=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", y, "CADD_raw_rankscore")]) + 1, mode="numeric"),
+    ntree=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in%  c("Gene", "GeneVariant", y, "CADD_raw_rankscore")]) + 1, mode="numeric"),
     stringsAsFactors=FALSE)
 
   rf_trees$rules <- list()
@@ -72,10 +73,10 @@ varpp <- function(dat,
     # Sampling the benign variants
     cls_benign  <- sample(cls_benign_genes, replace=TRUE)
 
-    benign_variants_sub <- dat$benign_variants[dat$benign_variants$Gene %in% unique(cls_benign), c("Gene","GeneVariant","Pathogenic","CADD_raw_rankscore")]
+    benign_variants_sub <- dat$benign_variants[dat$benign_variants$Gene %in% unique(cls_benign), c("Gene","GeneVariant",y,"CADD_raw_rankscore")]
 
     # The new sampling step based on the function in utilities
-    sub_benign <- varppRuleFit::.sample_benign_variants(benign_variants_sub, cls_benign)
+    sub_benign <- .sample_benign_variants(benign_variants_sub, cls_benign)
 
     # This is still necessary to make sure that only one variant is ever selected per gene
     sub_benign <- sub_benign[match(gsub("_.*$", "", sub_benign), gsub("_.*$", "", sub_benign))]
@@ -120,7 +121,7 @@ varpp <- function(dat,
 
     rm(dat_in, dat_out)
 
-    dat_boot$training$Pathogenic <- factor(dat_boot$training$Pathogenic)
+    dat_boot$training[,y] <- factor(dat_boot$training[,y])
 
     # Random forest does not handle missing data
     dat_boot$training_CADD <- na.omit(dat_boot$training[ , colnames(dat_boot$training) != "MetaSVM_rankscore"])
@@ -184,7 +185,7 @@ varpp <- function(dat,
 
 
   accuracy <- merge(data.frame(GeneVariant=rf_trees$rf_results$GeneVariant,
-                               Pathogenic=rf_trees$rf_results$Pathogenic,
+                               Pathogenic=rf_trees$rf_results[,y],
                                rf_results=rf_trees$rf_results$predictNum/rf_trees$rf_results$predictDenom),
                     bind_rows(dat$disease_variants[ , c("GeneVariant", "CADD_raw_rankscore")],
                                         dat$benign_variants[ , c("GeneVariant", "CADD_raw_rankscore")]),
@@ -198,6 +199,8 @@ varpp <- function(dat,
   names(RULES) <- paste0("rule_",1:length(RULES))
 
 
-  list(accuracy=accuracy, varimp=varimp, rules=RULES)
+  results <- list(accuracy=accuracy, varimp=varimp, rules=RULES)
+  class(results)<- "varpp"
+  return(results)
 
 }

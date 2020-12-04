@@ -2,9 +2,9 @@
 % Please edit documentation in R/varpp.R
 \name{varpp}
 \alias{varpp}
-\title{varpp_plus: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab}
+\title{varpp: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab}
 \usage{
-varpp(dat, ntree, max.depth, cores)
+varpp(dat, y, ntree, max.depth, cores)
 }
 \arguments{
 \item{dat}{this is a data list returned from the function load_gtex_or_hcl. It is either GTEx tissue specific gene expression or HCL cell specific expression}
@@ -16,5 +16,5 @@ varpp(dat, ntree, max.depth, cores)
 \item{cores}{number of cores for parallel, defaults to 4}
 }
 \description{
-varpp_plus: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab
+varpp: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab
 }

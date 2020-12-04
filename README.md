@@ -1,53 +1,80 @@
-# Package varpp RuleFit
+# Package varppRule
 
 Human interpretable predictive model for variant prioritisation of rare and other genetic diseases
+
+<p align="center">
+
+<img src="varpp-logo.png"  width="20%" height="20%">
+
+</p>
+
 
 ## Installation
 
 To install, type the following into `R` or `RStudio`:
 
 ```r
-devtools::install_github("Hobbeist/varppRuleFit")
+devtools::install_github("Hobbeist/varppRule")
 ```
 
-## Run
+## Run RuleFit
 
 ```r
 # Load the package
 library(varppRuleFit)
 
-# Specify the file locations
-benign_variant_file     <- "/data/benign_variants_simplified_51151.txt"
-pathogenic_variant_file <- "/data/vp_gene_2424/HP:0000591"
-expression_file         <- "/data/GTExV8_specificity_simplified.csv"
-
 #---------------------------------------------------------------------------------
 
 # Run the function
 
-rulefit_results <- rule_fit(expression_file = expression_file, 
-                            benign_variant_file = benign_variant_file,
-                            pathogenic_variant_file = pathogenic_variant_file,
-                            two_level_bootstrap = TRUE,
-                            ntree = 500,
+rulefit_results <- rule_fit(data = data, 
+                            y = y,
+                            ntree = 200,
                             max.depth = 3,
+                            rule.filter = 10,
                             bootstrap.rounds = 100,
-                            smote = FALSE,
-                            expression.source = "gtex",
-                            rule.extract.cores = 32,
-                            lasso.cores = 2,
-                            ranger.and.rulefit = TRUE,
-                            report = TRUE,
-                            report_filename="HP0000591",
-                            HPO_term_name = "HP:0000591")
+                            rule.extract.cores = 4,
+                            kappa.cores = 2,
+                            lasso.cores = 4,
+                            ranger.and.rulefit = FALSE
                             )
 
 ```
 
+## Run VARPP
+```r
+
+varpp_results <- varpp(dat = data,
+                       y = "Pathogenic"
+                       ntree = 2000,
+                       max.depth = NULL,
+                       cores = 4
+                      )
+                  
+```
 
 
-<p align="center">
+## License
 
-<img src="varpp-logo.png"  width="40%" height="40%">
+The contents of this repository are distributed under the MIT license. See below for details:
+```
+The MIT License (MIT)
 
-</p>
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

@@ -5,14 +5,15 @@
 \title{The RuleFit function}
 \usage{
 rule_fit(
-  HPOterm,
+  HPO,
   ntree = 200,
   max.depth = 3,
   rule.filter = 10,
   bootstrap.rounds = 100,
   rule.extract.cores = 4,
   kappa.cores = 2,
-  lasso.cores = 4
+  lasso.cores = 4,
+  ranger.and.rulefit = FALSE
 )
 }
 \arguments{
@@ -28,7 +29,9 @@ rule_fit(
 
 \item{kappa.cores}{number of cores used for the rule filtering by kappa. This needs to be seperate, as it is quite memory intensive when the input + rule data is very large. Defaults to 2.}
 
-\item{lasso.cores}{number of cores for the cv.glmnet step, as this is quite memory hungry, it is seperated
+\item{lasso.cores}{number of cores for the cv.glmnet step, as this is quite memory hungry, it is seperated}
+
+\item{ranger.and.rulefit}{in some cases, if not all, we want to be able to report the Random forest and the RuleFit accuracy together, to see how much better one performs over the other.
 This defaults to TRUE}
 
 \item{data}{a data set with features, an outcome variable and an index variable (probably created within the function in the end)}

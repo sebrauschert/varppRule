@@ -2,9 +2,9 @@
 #'
 #' @param x, an object of class varppRuleFit
 #' @export
-print.varppRuleFit <- function(x){
+print.varppRule <- function(x){
 
-  if(!class(x) =="varppRuleFit"){
+  if(!class(x) =="varppRule"){
     stop("Argument 'x' should be of class 'varppRuleFit'")
   }
 
@@ -34,7 +34,7 @@ print.varppRuleFit <- function(x){
   cat("Top predictors with performance:\n")
 
   cat("\n")
-  print(head(x$RuleFit$varimp,n = 10), print.gap = 2, quote = FALSE, row.names = FALSE)
+  print(head(x$RuleFit$varimp[grep("rule",x$RuleFit$varimp$Variable),], n=10), print.gap = 2, quote = FALSE, row.names = FALSE)
   invisible(x$RuleFit$varimp)
 
   cat("\n")
@@ -46,6 +46,64 @@ print.varppRuleFit <- function(x){
   print(x$rulefit_call)
   cat("\n")
 }
+
+
+#' Class specific functions
+#'
+#' @param x, an object of class varpp
+#' @export
+print.varpp <- function(x){
+
+  if(!class(x) =="varpp"){
+    stop("Argument 'x' should be of class 'varpp'")
+  }
+
+  cat("=========================================\n")
+
+  cat(c("", " __   ___   ___ ___ ___ ", " \\ \\ / /_\\ | _ \\ _ \\ _ \\",
+        "  \\ V / _ \\|   /  _/  _/", "   \\_/_/ \\_\\_|_\\_| |_|  ",
+        "                        "), sep="\n")
+
+  cat("\n")
+
+  cat("Top 10 predicted Variants:\n")
+
+  cat("\n")
+
+  print(x$accuracy %>% arrange(desc(rf_results)) %>% head(n=10) %>% rename(VARPP_Score = rf_results), print.gap = 2, quote = FALSE, row.names = FALSE)
+  cat("\n")
+
+  cat("========== Final VARPP model ==========\n")
+
+
+  cat("\n  Cohen's Kappa: ", as.numeric(.class_by_threshold(x$accuracy[,2], x$accuracy[,3])$overall["Kappa"]),
+      "\n  F1-score:", as.numeric(.class_by_threshold(x$accuracy[,2], x$accuracy[,3])$byClass["F1"]))
+
+  cat("\n")
+
+  cat("\n")
+
+  cat("======== Model performance ============\n")
+
+  cat("\n")
+
+  print(performance_varpp(x), print.gap = 2, quote = FALSE, row.names = FALSE)
+
+  cat("\n")
+
+  cat("=========================================\n")
+  cat("\n")
+  cat("Top predictors with importance score:\n")
+
+  cat("\n")
+  print(head(x$varimp, n=10)%>%arrange(desc(rf_results))%>%rename(Importance=rf_results), print.gap = 2, quote = FALSE, row.names = FALSE)
+  invisible(x$varimp)
+
+  cat("\n")
+
+  cat("=========================================\n")
+}
+
 
 
 #====================================================================================================================
@@ -211,20 +269,21 @@ metrics <- function(x) {
 
 #====================================================================================================================
 
-#' Return a table with model names, auPRC, PP100 and ntree of the model: only for regular rulefit, not two way
+#' Return a table with model names, auPRC, PP100 and ntree of the model: only for two level bootstrap model
 #' @param x an object of class \code{varppRuleFit}
 #' @import precrec
 #' @export
-auPRC_table <- function(x, ntree=x$ntree){
+performance <- function(x, ntree=x$ntree){
   results_varpp <-
     evalmod(
-      mmdata(scores=join_scores(x$RuleFit$accuracy[,3][!is.na(x$RuleFit$accuracy[,3])],
-                                x$RandomForest$accuracy[,3][!is.na(x$RandomForest$accuracy[,3])],
+      mmdata(scores=join_scores(x$RuleFit$accuracy$CADD_expression[!is.na(x$RuleFit$accuracy$CADD_expression)],
+                                x$RuleFit$accuracy$CADD_raw_rankscore[!is.na(x$RuleFit$accuracy$CADD_raw_rankscore)],
                                 chklen=FALSE),
-             join_labels(x$RuleFit$accuracy[,2][!is.na(x$RuleFit$accuracy[,3])],
-                         x$RandomForest$accuracy[,2][!is.na(x$RandomForest$accuracy[,3])],
+
+             join_labels(x$RuleFit$accuracy$Pathogenic[!is.na(x$RuleFit$accuracy$CADD_expression)],
+                         x$RuleFit$accuracy$Pathogenic[!is.na(x$RuleFit$accuracy$CADD_raw_rankscore)],
                          chklen=FALSE),
-             modnames=c("RuleFit", "RandomForest"),
+             modnames=c("RuleFit","CADD_raw_rankscore"),
              dsids=1:2)
     )
 
@@ -232,17 +291,46 @@ auPRC_table <- function(x, ntree=x$ntree){
   model_results <-     auc(results_varpp) %>%
     filter(curvetypes %in% "PRC") %>%
     select(-c(dsids,curvetypes)) %>%
-    mutate(PP100 = c(sum(as.numeric(as.character(x$RuleFit$accuracy[order(-(x$RuleFit$accuracy[,3])), ][1:100, 2])))/100,
-                     sum(as.numeric(as.character(x$RandomForest$accuracy[order(-(x$RandomForest$accuracy[,3])), ][1:100,2])))/100)) %>%
+    mutate(PP100 = c(sum(x$RuleFit$accuracy[order(-(x$RuleFit$accuracy$CADD_expression)), ][1:100, "Pathogenic"])/100,
+                     sum(x$RuleFit$accuracy[order(-(x$RuleFit$accuracy$CADD_raw_rankscore)), ][1:100, "Pathogenic"])/100)) %>%
     mutate(ntree = ntree) %>%
     rename(auPRC = aucs)
 
   model_results
 }
 
-
 #====================================================================================================================
 
+#' Return a table with model names, auPRC, PP100 and ntree of the model: only for two level bootstrap model
+#' @param x an object of class \code{varppRuleFit}
+#' @import precrec
+#' @export
+performance_varpp <- function(x){
+  results_varpp <-
+    evalmod(
+      mmdata(scores=join_scores(x$accuracy$rf_results[!is.na(x$accuracy$rf_results)],
+                                x$accuracy$CADD_raw_rankscore[!is.na(x$accuracy$CADD_raw_rankscore)],
+                                chklen=FALSE),
+
+             join_labels(x$accuracy$Pathogenic[!is.na(x$accuracy$rf_results)],
+                         x$accuracy$Pathogenic[!is.na(x$accuracy$CADD_raw_rankscore)],
+                         chklen=FALSE),
+             modnames=c("VARPP","CADD_raw_rankscore"),
+             dsids=1:2)
+    )
+
+
+  model_results <-     auc(results_varpp) %>%
+    filter(curvetypes %in% "PRC") %>%
+    select(-c(dsids,curvetypes)) %>%
+    mutate(PP100 = c(sum(x$accuracy[order(-(x$accuracy$rf_results)), ][1:100, "Pathogenic"])/100,
+                     sum(x$accuracy[order(-(x$accuracy$CADD_raw_rankscore)), ][1:100, "Pathogenic"])/100)) %>%
+    rename(auPRC = aucs)
+
+  model_results
+}
+
+#====================================================================================================================
 
 #' Calculate kappa statistic
 #' @param cross_table the confusion Matrix of predictions and actual data
@@ -275,7 +363,7 @@ selected_rule_performance <- function(rulename,
                                       rulefit_results_object
 ){
 
-  data           = rulefit_results_object$RuleData$dat
+  data           = rulefit_results_object$RuleData
   predictions    = rulefit_results_object$RuleFit$accuracy[,1]
   predicted_data = subset(data, data$GeneVariant %in% predictions)
 
@@ -294,6 +382,7 @@ selected_rule_performance <- function(rulename,
 }
 
 #====================================================================================================================
+
 
 #' Extract rules from ranger trees
 #'
@@ -323,6 +412,55 @@ selected_rule_performance <- function(rulename,
 #====================================================================================================================
 
 
+#' Simulate data to test the rulefit function
+#'
+#' @param n the number of instances
+#' @param p the number of variables
+#' @param seed the seed, to create reproducible results
+#'
+#' @return a simulated data set with a binary outcome variable and 35 predictors that are associated with the outcome
+#
+#' @export
+simulate_data <- function(n=1000,
+                          p = 100,
+                          seed = 777){
+
+  n = n
+  p = p
+  #no influence : 65
+
+  #xij ∼ U(0, 1)
+  set.seed(seed)
+  x <- NULL
+  for( i in 1:p){
+
+    x <- cbind(x,runif(n, min = 0, max = 1))
+
+  }
+
+  x <- data.frame(x)
+  names(x) <- paste0("x", 1:dim(x)[2])
+
+  # Create noise variable
+  e <- rnorm(n, mean = 0, sd =2)
+
+  y <-  10*(exp(x[,1]^2) * exp(x[,2]^2) * exp(x[,3]^2) * exp(x[,4]^2) * exp(x[,5]^2)) + rowSums(x[,6:35] + e)
+
+  y_bin <- ifelse(y > median(y), 1, 0)
+
+
+  x$y <- y_bin
+  x$index <- c(1:dim(x)[1])
+  x <- x[,c("index", "y", names(x)[grep("x", names(x))])]
+  x$index.1 <- NULL
+
+  x
+}
+
+
+#====================================================================================================================
+
+
 #' Density plot for the rule predictions
 #'
 #' @param rulefit_results an object of class varppRuleFit
@@ -333,15 +471,16 @@ selected_rule_performance <- function(rulename,
 density_plot <- function(rulefit_results){
 
   # Create a data set to show the ratio of predicted classes in the rules versus actual classes
-  data.all  <- rulefit_results$RuleData$dat[,c(1,2,grep("rule",names(rulefit_results$RuleData$dat)))]
-  plot.data <- data.frame(pathogenic = data.all[,2], predictions= rowSums(data.all[,grep("rule", names(data.all))]))
+  data.all  <- rulefit_results$RuleData[,c(1,2,3,grep("rule",names(rulefit_results$RuleData)))]
+  plot.data <- data.frame(pathogenic = data.all[,3], predictions= rowSums(data.all[,grep("rule", names(data.all))]))
 
   # Plot the density
   plot.data %>%
+    mutate(pathogenic = ifelse(pathogenic %in% 1, "Pathogenic", "Benign")) %>%
     ggplot(aes(x=predictions)) +
     geom_density(aes(x=predictions, y=..scaled.., fill=as.factor(pathogenic)), alpha=1/2) +
     theme_minimal() +
-    scale_fill_discrete(name = names(rulefit_results$RuleData$dat)[2], labels = c("negative", "positive")) +
+    scale_fill_discrete(name = names(rulefit_results$RuleData)[2], labels = c("negative", "positive")) +
     facet_wrap(~pathogenic)
 }
 
