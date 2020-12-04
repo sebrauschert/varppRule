@@ -4,16 +4,16 @@
 \alias{varpp}
 \title{varpp: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab}
 \usage{
-varpp(dat, y, ntree, max.depth, cores)
+varpp(HPO, ntree, max.depth, cores)
 }
 \arguments{
-\item{dat}{this is a data list returned from the function load_gtex_or_hcl. It is either GTEx tissue specific gene expression or HCL cell specific expression}
-
 \item{ntree}{is the number of trees that should be built for ranger. It defaults to 1000}
 
 \item{max.depth}{is the maximum tree depth for the ranger trees. IT defaults to 3.}
 
 \item{cores}{number of cores for parallel, defaults to 4}
+
+\item{dat}{this is a data list returned from the function load_gtex_or_hcl. It is either GTEx tissue specific gene expression or HCL cell specific expression}
 }
 \description{
 varpp: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab

@@ -13,17 +13,43 @@
 #' @import foreach
 #' @importFrom iterators icount
 #' @export
-varpp <- function(dat,
-                  y,
+varpp <- function(HPO,
                   ntree,
                   max.depth,
                   cores){
 
+  #=====================================================================================
+  # Prepare the data
+  #=====================================================================================
+  # Get the gene names
+  hpo_gene_names <- HPO$Gene
+
+  # Filter the genes that we got from phenolyzer
+  patho %>%
+    filter(Gene %in% hpo_gene_names) %>%
+    select(-c(CADD_raw_rankscore)) %>%
+    rename(CADD_raw_rankscore = CADD_PHRED_SCORE) -> varpp_patho
+
+  varpp_patho <- varpp_patho[,c(1,2,4,3,7:length(names(varpp_patho)))]
+
+
+  # Filter out the benign genes that are in the pathogenic gene list
+  benign %>%
+    filter(!Gene %in% intersect(benign$Gene, patho$Gene)) %>%
+    select(-c(CADD_raw_rankscore)) %>%
+    rename(CADD_raw_rankscore = CADD_PHRED_SCORE) -> varpp_benign
+
+  varpp_benign <- varpp_benign[,c(1,2,4,3,7:length(names(varpp_benign)))]
+
+  # Create the input data for varppRuleFit
+  dat <- list(dat=data.frame(rbind(varpp_patho, varpp_benign)), disease_variants=data.frame(varpp_patho), benign_variants=data.frame(varpp_benign))
+
+
 
 
   # Spedify the benign and pathogenic gene names
-  cls_pathogenic_genes = unique(dat$dat$Gene[dat$dat[,y] %in% 1])
-  cls_benign_genes     = unique(dat$dat$Gene[dat$dat[,y] %in% 0])
+  cls_pathogenic_genes = unique(dat$dat$Gene[dat$dat$Pathogenic %in% 1])
+  cls_benign_genes     = unique(dat$dat$Gene[dat$dat$Pathogenic %in% 0])
 
   #=====================================================================================
   # SET UP RESULTS TABLE
@@ -33,14 +59,14 @@ varpp <- function(dat,
   rf_trees <- list()
 
   rf_trees$rf_results <- data.frame(
-    bind_rows(dat$disease_variants[ , c("GeneVariant",y)], dat$benign_variants[ , c("GeneVariant",y)]),
+    bind_rows(dat$disease_variants[ , c("GeneVariant","Pathogenic")], dat$benign_variants[ , c("GeneVariant","Pathogenic")]),
     predictNum=vector(length=nrow(dat$disease_variants) + nrow(dat$benign_variants), mode="numeric"),
     predictDenom=vector(length=nrow(dat$disease_variants) + nrow(dat$benign_variants), mode="numeric"))
 
   rf_trees$rf_results_varimp <- data.frame(
-    Variable=c("CADD_raw_rankscore", colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", y, "CADD_raw_rankscore")]),
-    sumVarimp=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", y, "CADD_raw_rankscore")]) + 1, mode="numeric"),
-    ntree=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in%  c("Gene", "GeneVariant", y, "CADD_raw_rankscore")]) + 1, mode="numeric"),
+    Variable=c("CADD_raw_rankscore", colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", "Pathogenic", "CADD_raw_rankscore")]),
+    sumVarimp=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in% c("Gene", "GeneVariant", "Pathogenic", "CADD_raw_rankscore")]) + 1, mode="numeric"),
+    ntree=vector(length=length(colnames(dat$dat)[!colnames(dat$dat) %in%  c("Gene", "GeneVariant", "Pathogenic", "CADD_raw_rankscore")]) + 1, mode="numeric"),
     stringsAsFactors=FALSE)
 
   rf_trees$rules <- list()
@@ -73,7 +99,7 @@ varpp <- function(dat,
     # Sampling the benign variants
     cls_benign  <- sample(cls_benign_genes, replace=TRUE)
 
-    benign_variants_sub <- dat$benign_variants[dat$benign_variants$Gene %in% unique(cls_benign), c("Gene","GeneVariant",y,"CADD_raw_rankscore")]
+    benign_variants_sub <- dat$benign_variants[dat$benign_variants$Gene %in% unique(cls_benign), c("Gene","GeneVariant","Pathogenic","CADD_raw_rankscore")]
 
     # The new sampling step based on the function in utilities
     sub_benign <- .sample_benign_variants(benign_variants_sub, cls_benign)
@@ -121,7 +147,7 @@ varpp <- function(dat,
 
     rm(dat_in, dat_out)
 
-    dat_boot$training[,y] <- factor(dat_boot$training[,y])
+    dat_boot$training$Pathogenic <- factor(dat_boot$training$Pathogenic)
 
     # Random forest does not handle missing data
     dat_boot$training_CADD <- na.omit(dat_boot$training[ , colnames(dat_boot$training) != "MetaSVM_rankscore"])
@@ -185,7 +211,7 @@ varpp <- function(dat,
 
 
   accuracy <- merge(data.frame(GeneVariant=rf_trees$rf_results$GeneVariant,
-                               Pathogenic=rf_trees$rf_results[,y],
+                               Pathogenic=rf_trees$rf_results$Pathogenic,
                                rf_results=rf_trees$rf_results$predictNum/rf_trees$rf_results$predictDenom),
                     bind_rows(dat$disease_variants[ , c("GeneVariant", "CADD_raw_rankscore")],
                                         dat$benign_variants[ , c("GeneVariant", "CADD_raw_rankscore")]),
