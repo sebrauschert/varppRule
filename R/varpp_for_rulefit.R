@@ -9,6 +9,7 @@
 #' @import doParallel
 #' @import parallel
 #' @import tidyverse
+#' @import dplyr
 #' @import ranger
 #' @import magrittr
 #' @importFrom magrittr "%>%"
