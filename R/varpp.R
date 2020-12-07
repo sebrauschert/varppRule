@@ -1,6 +1,7 @@
-#'varpp: extract rules from ranger trees and report Random Forest auPRC, accuracy, Sens, Spec, Kappa, crosstab
+#'varpp: VARiant Prioritisation by Phenotype
 #'
-#' @param dat this is a data list returned from the function load_gtex_or_hcl. It is either GTEx tissue specific gene expression or HCL cell specific expression
+#' @param HPO HPO term associated list of genes
+#' @param type the prediction data; either hcl (single cell) or gtex (tissue specific)
 #' @param ntree is the number of trees that should be built for ranger. It defaults to 1000
 #' @param max.depth is the maximum tree depth for the ranger trees. IT defaults to 3.
 #' @param cores number of cores for parallel, defaults to 4
@@ -14,13 +15,26 @@
 #' @importFrom iterators icount
 #' @export
 varpp <- function(HPO,
-                  ntree,
-                  max.depth,
-                  cores){
+                  type="gtex",
+                  ntree=500,
+                  max.depth=NULL,
+                  cores=4){
 
   #=====================================================================================
   # Prepare the data
   #=====================================================================================
+
+  if(type %in% "gtex"){
+
+    patho  <- patho_gtex
+    benign <- benign_gtex
+  } else {
+    patho  = patho_hcl
+    benign = benign_hcl
+  }
+
+
+  message(paste0("VARPP initiated with ", ntree," trees, maximum depth of ", max.depth," and ",type," data."))
   # Get the gene names
   hpo_gene_names <- HPO$Gene
 
@@ -227,6 +241,7 @@ varpp <- function(HPO,
 
   results <- list(accuracy=accuracy, varimp=varimp, rules=RULES)
   class(results)<- "varpp"
+  message("VARPP finished!")
   return(results)
 
 }

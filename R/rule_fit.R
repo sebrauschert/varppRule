@@ -3,9 +3,8 @@
 #' This is rulefit in general. When not using the VARPP framework, this function allows to perform rulefit on any data set with a
 #' binary outcome.
 #'
-#' @param data a data set with features, an outcome variable and an index variable (probably created within the function in the end)
-#' @param y the outcome variable name
-#' @param two_level_bootstrap this is TRUE by default and is necessar when sampling has to be performed on agene and gene variant level
+#' @param HPO HPO term associated list of genes
+#' @param type the prediction data; either hcl (single cell) or gtex (tissue specific)
 #' @param ntree number of trees to be built, defaults to 200
 #' @param max.depth maximum tree depth, defaults to 3
 #' @param rule.filter filter the top n rules based on kappa statistic. If NULL, the rules are filter above a kappa of 0.05
@@ -42,6 +41,7 @@
 #' @import tidyselect
 #' @export
 rule_fit <- function(HPO,
+                     type = "gtex",
                      ntree = 200,
                      max.depth = 3,
                      rule.filter = 10,
@@ -69,8 +69,16 @@ rule_fit <- function(HPO,
   #========================================================================================
   # Prepare the data
   #========================================================================================
-  #patho  <- varppRule:::patho
-  #benign <- varppRule:::benign
+  if(type %in% "gtex"){
+
+  patho  <- patho_gtex
+  benign <- benign_gtex
+
+  } else {
+    patho  = patho_hcl
+    benign = benign_hcl
+  }
+
 
   y = "Pathogenic"
   # Get the gene names
@@ -128,7 +136,7 @@ rule_fit <- function(HPO,
 
 
   }else{
-    message(paste0("Extracting rules from ",ntree, " trees, with a max.depth of ", max.depth, ", using ", rule.extract.cores, " cores"))
+    message(paste0("Extracting rules from ",ntree, " trees, with a max.depth of ", max.depth, ", using ", rule.extract.cores, " cores and ", type," data"))
 
 
       # Bootstrap rounds is a new addition as I try to save the dat_boot oject for

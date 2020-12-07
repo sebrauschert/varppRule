@@ -6,6 +6,7 @@
 \usage{
 rule_fit(
   HPO,
+  type = "gtex",
   ntree = 200,
   max.depth = 3,
   rule.filter = 10,
@@ -17,6 +18,10 @@ rule_fit(
 )
 }
 \arguments{
+\item{HPO}{HPO term associated list of genes}
+
+\item{type}{the prediction data; either hcl (single cell) or gtex (tissue specific)}
+
 \item{ntree}{number of trees to be built, defaults to 200}
 
 \item{max.depth}{maximum tree depth, defaults to 3}
@@ -33,12 +38,6 @@ rule_fit(
 
 \item{ranger.and.rulefit}{in some cases, if not all, we want to be able to report the Random forest and the RuleFit accuracy together, to see how much better one performs over the other.
 This defaults to TRUE}
-
-\item{data}{a data set with features, an outcome variable and an index variable (probably created within the function in the end)}
-
-\item{y}{the outcome variable name}
-
-\item{two_level_bootstrap}{this is TRUE by default and is necessar when sampling has to be performed on agene and gene variant level}
 }
 \value{
 A list of predictions for the outcome. Further, a variable importance list for all rules and variables tested.
