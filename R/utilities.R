@@ -531,3 +531,59 @@ ruleVariantPlot <- function(rulefit_results) {
     coord_flip()
   #) %>% hide_legend()
 }
+
+
+#' varIMP: Function to extract the variable importance of the expression data variables
+#'
+#' This function is provided on top of ruleVarImp. It Re-weights the rule kappas by the variabels selected per rule
+#' and returns a 0 to 1 scaled importance value per tissue. The most important variabel will have a value of 1.
+#' This is based on the variabel importance described in the RuleFit publication by XXX
+#'
+#' @param rule_model This is the RuleFit model object
+#' @param HPOterm  Add the HPO term name for the model
+#' @export
+
+varIMP <- function(rule_model=NULL,
+                   HPOterm){
+
+  if(is.null(rule_model)){
+    stop("Please provide a RuleFit object")
+  }
+
+  range01 <- function(x){
+    (x-min(x))/(max(x)-min(x))
+  }
+
+  rule_kappas_to_merge <- data.frame(rules = names(rule_model$rule_kappas), kappa= as.numeric(rule_model$rule_kappas))
+  rules                <- merge(rule_model$RuleFit$varimp, rule_kappas_to_merge, by.x="Variable", by.y="rules")
+
+  DAT <- NULL
+
+  for(i in 1:dim(rules)[1]){
+    tissues <- unlist(str_extract_all(as.vector(unlist(rules[grep("rule",rules$Variable), "Description"][i])), "[A-Z_a-z_0-9.]+"))
+    DAT <- rbind(DAT, data.frame(tissues, kappa=rules[i,"kappa"], count=length(unique(tissues))))
+  }
+
+  DAT %>%
+    group_by(tissues) %>%
+    summarise(kappa=mean(kappa), count=mean(count)) -> results
+  tiss <- plyr::count(unlist(str_extract_all(as.vector(unlist(rules[grep("rule",rules$Variable), "Description"])), "[A-Z_a-z_0-9.]+")))
+  tissue_count <- tiss[-grep("^\\d", tiss$x),] %>%
+    arrange(desc(freq))
+
+  all_info <- merge(results, tissue_count, by.x="tissues", by.y="x")
+
+  all_info %>%
+    mutate(heat_value=kappa/count*freq) %>%
+    arrange(desc(heat_value)) %>%
+    filter(!tissues %in% "CADD_raw_rankscore") %>%
+    rename(!!HPOterm:=heat_value) %>%
+    rename(Variables = tissues) -> all_info
+
+  all_info[,5] <- range01(all_info[,5])
+  RESULTS <- all_info[,c(1,5)]
+
+  RESULTS <- RESULTS %>%
+    replace(is.na(.),0)
+  RESULTS
+}
