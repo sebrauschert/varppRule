@@ -587,3 +587,17 @@ varIMP <- function(rule_model=NULL,
     replace(is.na(.),0)
   RESULTS
 }
+
+#' Function to remove the CADD score variable including '>' , '<' and '=' from the rules
+#'
+#' @param rule a single rule in text/string form
+#'
+#' @importFrom stringr str_squish str_remove
+#' @export
+removeCADD <- function(rule){
+  str_squish(str_remove(Rule, "CADD_raw_rankscore [<|>|<=|>=] [0-9]*\\.?[0-9][0-9] [&]"))
+}
+
+
+
+
