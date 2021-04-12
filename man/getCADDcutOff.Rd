@@ -4,10 +4,10 @@
 \alias{getCADDcutOff}
 \title{Function to extract CADD score including cut-off}
 \usage{
-getCADDcutOff(rule)
+getCADDcutOff(varppRuleObject)
 }
 \arguments{
-\item{rule}{a single rule in text/string format}
+\item{varppRuleObject}{the results from varppRule}
 }
 \description{
 Function to extract CADD score including cut-off

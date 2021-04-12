@@ -590,23 +590,25 @@ varIMP <- function(rule_model=NULL,
 
 #' Function to remove the CADD score variable including '>' , '<' and '=' from the rules
 #'
-#' @param rule a single rule in text/string form
+#' @param varppRuleObject the results from varppRule
 #'
 #' @importFrom stringr str_squish str_remove
 #' @export
 removeCADD <- function(rule){
+  rule   <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
   rule_trimmed <- str_squish(str_remove(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?"))
   str_squish(str_remove(rule_trimmed, "^&\\s?"))
 }
 
 #' Function to extract CADD score including cut-off
 #'
-#' @param rule a single rule in text/string format
+#' @param varppRuleObject the results from varppRule
 #'
 #' @importFrom stringr str_squish str_extract
 #' @export
-getCADDcutOff <- function(rule) {
-  rule_trimmed<- str_extract(Rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")
+getCADDcutOff <- function(varppRuleObject) {
+  rule   <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
+  rule_trimmed<- str_extract(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")
   str_squish(str_remove(rule_trimmed, "^&\\s?"))
 }
 

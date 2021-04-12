@@ -7,7 +7,7 @@
 removeCADD(rule)
 }
 \arguments{
-\item{rule}{a single rule in text/string form}
+\item{varppRuleObject}{the results from varppRule}
 }
 \description{
 Function to remove the CADD score variable including '>' , '<' and '=' from the rules
