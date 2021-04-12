@@ -634,13 +634,13 @@ genePanelTop <- function(varppRuleObject) {
 
     if(grepl('CADD_raw_rankscore >', i)) {
       PANEL <-  cbind(PANEL,varppRuleObject$RuleData %>%
-                        mutate(!!i := ifelse(eval(parse(text=removeCADD(i))), 1, 0 )) %>%
+                        mutate(!!i := ifelse(eval(parse(text=removeCADD(varppRuleObject))), 1, 0 )) %>%
                         select(!!i) )
 
     }else{
 
       PANEL <- cbind(PANEL,varppRuleObject$RuleData %>%
-                       mutate(!!i := ifelse(eval(parse(text=removeCADD(i))), 0, 1 )) %>%
+                       mutate(!!i := ifelse(eval(parse(text=removeCADD(varppRuleObject))), 0, 1 )) %>%
                        select(!!i))
 
 
