@@ -4,7 +4,7 @@
 \alias{removeCADD}
 \title{Function to remove the CADD score variable including '>' , '<' and '=' from the rules}
 \usage{
-removeCADD(rule)
+removeCADD(varppRuleObject)
 }
 \arguments{
 \item{varppRuleObject}{the results from varppRule}

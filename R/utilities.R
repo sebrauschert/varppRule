@@ -594,7 +594,7 @@ varIMP <- function(rule_model=NULL,
 #'
 #' @importFrom stringr str_squish str_remove
 #' @export
-removeCADD <- function(rule){
+removeCADD <- function(varppRuleObject){
   rule   <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
   rule_trimmed <- str_squish(str_remove(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?"))
   str_squish(str_remove(rule_trimmed, "^&\\s?"))
