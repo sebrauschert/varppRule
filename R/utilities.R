@@ -595,9 +595,62 @@ varIMP <- function(rule_model=NULL,
 #' @importFrom stringr str_squish str_remove
 #' @export
 removeCADD <- function(rule){
-  str_squish(str_remove(Rule, "CADD_raw_rankscore [<|>|<=|>=] [0-9]*\\.?[0-9][0-9] [&]"))
+  rule_trimmed <- str_squish(str_remove(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?"))
+  str_squish(str_remove(rule_trimmed, "^&\\s?"))
+}
+
+#' Function to extract CADD score including cut-off
+#'
+#' @param rule a single rule in text/string format
+#'
+#' @importFrom stringr str_squish str_extract
+#' export
+getCADDcutOff <- function(rule) {
+  rule_trimmed<- str_extract(Rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")
+  str_squish(str_remove(rule_trimmed, "^&\\s?"))
 }
 
 
 
+#' Return a gene panel based on the tissues in the top rule
+#'
+#' @param varppRuleFitObject the results from varppRule
+#'
+#' @importFrom stringr str_squish str_remove
+#' @import from magrittr '%in%'
+#' @import dplyr
+#' @export
 
+genePanelTop <- function(varppRuleObject) {
+
+  PANEL <- varppRuleObject$RuleData[,c("Gene", "Pathogenic")]
+  rules <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
+
+
+
+  for(i in rules) {
+
+    if(grepl('CADD_raw_rankscore >', i)) {
+      PANEL <-  cbind(PANEL,varppRuleObject$RuleData %>%
+                        mutate(!!i := ifelse(eval(parse(text=removeCADD(i))), 1, 0 )) %>%
+                        select(!!i) )
+
+    }else{
+
+      PANEL <- cbind(PANEL,varppRuleObject$RuleData %>%
+                       mutate(!!i := ifelse(eval(parse(text=removeCADD(i))), 0, 1 )) %>%
+                       select(!!i))
+
+
+    }
+  }
+
+  varppRuleObject$RuleData %>%
+    mutate(panel_selection = ifelse(PANEL[,3] %in% 1, TRUE, FALSE)) %>%
+    filter(panel_selection %in% TRUE) %>%
+    select(Gene) %>%
+    unlist() %>%
+    as.character() %>%
+    unique()
+
+}
