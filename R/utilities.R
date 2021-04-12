@@ -604,7 +604,7 @@ removeCADD <- function(rule){
 #' @param rule a single rule in text/string format
 #'
 #' @importFrom stringr str_squish str_extract
-#' export
+#' @export
 getCADDcutOff <- function(rule) {
   rule_trimmed<- str_extract(Rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")
   str_squish(str_remove(rule_trimmed, "^&\\s?"))
@@ -617,7 +617,7 @@ getCADDcutOff <- function(rule) {
 #' @param varppRuleFitObject the results from varppRule
 #'
 #' @importFrom stringr str_squish str_remove
-#' @import from magrittr '%in%'
+#' @importFrom magrittr '%>%'
 #' @import dplyr
 #' @export
 
