@@ -645,9 +645,9 @@ getCADDcutOff <- function(varppRuleObject) {
 genePanelTop <- function(varppRuleObject) {
 
   PANEL <- varppRuleObject$RuleData[,c("Gene", "Pathogenic")]
-  topRule <- names(modelExample$rule_kappas[which(modelExample$rule_kappas %in% max(modelExample$rule_kappas))])
+  topRule <- names(varppRuleObject$rule_kappas[which(varppRuleObject$rule_kappas %in% max(varppRuleObject$rule_kappas))])
 
-  rule <- modelExample$RuleFit$varimp[grep("rule",modelExample$RuleFit$varimp$Variable),] %>%
+  rule <- varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),] %>%
     filter(Variable %in% topRule) %>%
     select(Description) %>%
     unlist() %>%
