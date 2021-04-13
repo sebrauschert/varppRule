@@ -588,6 +588,8 @@ varIMP <- function(rule_model=NULL,
   RESULTS
 }
 
+
+
 #' Function to remove the CADD score variable including '>' , '<' and '=' from the rules
 #'
 #' @param varppRuleObject the results from varppRule
@@ -595,10 +597,20 @@ varIMP <- function(rule_model=NULL,
 #' @importFrom stringr str_squish str_remove
 #' @export
 removeCADD <- function(varppRuleObject){
-  rule   <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
-  rule_trimmed <- str_squish(str_remove(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?"))
+  topRule <- names(varppRuleObject$rule_kappas[which(varppRuleObject$rule_kappas %in% max(varppRuleObject$rule_kappas))])
+
+  rule <- varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),] %>%
+    filter(Variable %in% topRule) %>%
+    select(Description) %>%
+    unlist() %>%
+    as.character()
+
+  rule_trimmed <- str_remove(str_squish(str_remove(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")),
+                             "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")
   str_squish(str_remove(rule_trimmed, "^&\\s?"))
 }
+
+
 
 #' Function to extract CADD score including cut-off
 #'
@@ -607,8 +619,15 @@ removeCADD <- function(varppRuleObject){
 #' @importFrom stringr str_squish str_extract
 #' @export
 getCADDcutOff <- function(varppRuleObject) {
-  rule   <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
-  rule_trimmed<- str_extract(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?")
+  topRule <- names(varppRuleObject$rule_kappas[which(varppRuleObject$rule_kappas %in% max(varppRuleObject$rule_kappas))])
+
+  rule <- varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),] %>%
+    filter(Variable %in% topRule) %>%
+    select(Description) %>%
+    unlist() %>%
+    as.character()
+
+  rule_trimmed <- paste(str_extract_all(rule, "[&]?\\s?CADD_raw_rankscore [<|>|<=|>=]* [0-9]*\\.?[0-9]*\\s?") %>% unlist() %>% str_replace("& ", ""), collapse=", ")
   str_squish(str_remove(rule_trimmed, "^&\\s?"))
 }
 
@@ -626,26 +645,28 @@ getCADDcutOff <- function(varppRuleObject) {
 genePanelTop <- function(varppRuleObject) {
 
   PANEL <- varppRuleObject$RuleData[,c("Gene", "Pathogenic")]
-  rules <- as.character(varppRuleObject$RuleFit$varimp[grep("rule",varppRuleObject$RuleFit$varimp$Variable),'Description'])[1]
+  topRule <- names(modelExample$rule_kappas[which(modelExample$rule_kappas %in% max(modelExample$rule_kappas))])
+
+  rule <- modelExample$RuleFit$varimp[grep("rule",modelExample$RuleFit$varimp$Variable),] %>%
+    filter(Variable %in% topRule) %>%
+    select(Description) %>%
+    unlist() %>%
+    as.character()
 
 
-
-  for(i in rules) {
-
-    if(grepl('CADD_raw_rankscore >', i)) {
+    if(grepl('CADD_raw_rankscore >', rule)) {
       PANEL <-  cbind(PANEL,varppRuleObject$RuleData %>%
-                        mutate(!!i := ifelse(eval(parse(text=removeCADD(varppRuleObject))), 1, 0 )) %>%
-                        select(!!i) )
+                        mutate(!!rule := ifelse(eval(parse(text=removeCADD(varppRuleObject))), 1, 0 )) %>%
+                        select(!!rule) )
 
     }else{
 
       PANEL <- cbind(PANEL,varppRuleObject$RuleData %>%
-                       mutate(!!i := ifelse(eval(parse(text=removeCADD(varppRuleObject))), 0, 1 )) %>%
-                       select(!!i))
+                       mutate(!!rule := ifelse(eval(parse(text=removeCADD(varppRuleObject))), 0, 1 )) %>%
+                       select(!!rule))
 
 
     }
-  }
 
   varppRuleObject$RuleData %>%
     mutate(panel_selection = ifelse(PANEL[,3] %in% 1, TRUE, FALSE)) %>%
