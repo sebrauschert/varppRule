@@ -22,13 +22,11 @@
 #' @import ranger
 #' @import foreach
 #' @import caret
-#' @import DMwR
 #' @import glmnet
 #' @import tidyverse
 #' @import magrittr
 #' @importFrom parallel detectCores
 #' @importFrom caret trainControl train nearZeroVar
-#' @import DMwR
 #' @import lattice
 #' @import ggplot2
 #' @import grid

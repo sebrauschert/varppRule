@@ -9,12 +9,10 @@
 #' @return A list of predictions for the CADD raw rankscore and the tissue/cell specific expression added. Further, a variable importance list for all rules and variables tested.
 #'
 #' @import caret
-#' @import DMwR
 #' @import glmnet
 #' @import tidyverse
 #' @import magrittr
 #' @importFrom caret trainControl train nearZeroVar
-#' @import DMwR
 #' @import doMC
 #' @import doParallel
 #' @import parallel

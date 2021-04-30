@@ -32,7 +32,6 @@ Imports:
    caret,
    tidypredict,
    progress,
-   DMwR,
    stringr,
    dplyr,
    magrittr,
