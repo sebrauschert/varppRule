@@ -23,15 +23,6 @@ lasso_ensemble <- function(data,
                              bootstrap.rounds,
                              cores){
 
-  time          = NULL
-  memory        = NULL
-  process_stage = NULL
-
-  # Memory checkpoint
-  time   = c(time, as.character(Sys.time()))
-  memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-  process_stage = c(process_stage, "First checkpoint in LASSO")
-  # Memory checkpoint
 
   # Specify benign and pathogenic gene names for sampling
   cls_pathogenic_genes = unique(data$dat$Gene[data$dat$Pathogenic %in% 1])
@@ -61,15 +52,6 @@ lasso_ensemble <- function(data,
   rf_trees$memory <- NULL
   rf_trees$process_stage <- NULL
 
-  # Mem Call
-
-  # Memory checkpoint
-  time   = c(time, as.character(Sys.time()))
-  memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-  process_stage = c(process_stage, "LASSO: AFter setting up results table")
-  # Memory checkpoint
-
-
   #==========================================================================================
   # THE SAMPLING LOOP
   #==========================================================================================
@@ -78,8 +60,6 @@ lasso_ensemble <- function(data,
   inbag = NULL
 
   # Sampling
-  #registerDoMC(cores=cores)
-
   cl <- makeCluster(cores)
   registerDoParallel(cl)
 
@@ -87,12 +67,6 @@ lasso_ensemble <- function(data,
 
   inbag <- foreach (j = 1:bootstrap.rounds) %dopar% {
 
-
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "First call in CV loop")
-    # Memory checkpoint
 
     print(paste0("Fold:", j))
     cls_patho   <- sample(cls_pathogenic_genes, replace=TRUE)
@@ -105,12 +79,8 @@ lasso_ensemble <- function(data,
     # Sampling the benign variants
     cls_benign  <- sample(cls_benign_genes, replace=TRUE)
 
-#      benign_variants_sub <- data$benign_variants[data$benign_variants$Gene %in% unique(cls_benign), c("Gene","GeneVariant","Pathogenic","MetaSVM_rankscore","CADD_raw_rankscore")]
-          benign_variants_sub <- data$benign_variants[data$benign_variants$Gene %in% unique(cls_benign), c("Gene","GeneVariant","Pathogenic","CADD_raw_rankscore")]
-    # sub_benign          <- lapply(cls_benign, FUN=function(x) benign_variants_sub[which(benign_variants_sub$Gene == x), "GeneVariant"])
-    # sub_benign          <- lapply(sub_benign, FUN=function(x) sample(x, size=1))
-    # sub_benign          <- dplyr::combine(sub_benign)
-    # sub_benign          <- sub_benign[match(gsub("_.*$", "", sub_benign), gsub("_.*$", "", sub_benign))]
+    benign_variants_sub <- data$benign_variants[data$benign_variants$Gene %in% unique(cls_benign),
+                                                c("Gene","GeneVariant","Pathogenic","CADD_raw_rankscore")]
 
     # The new sampling step based on the function in utilities
     sub_benign <- .sample_benign_variants(benign_variants_sub, cls_benign)
@@ -137,12 +107,6 @@ lasso_ensemble <- function(data,
                           select(weight)))
 
 
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After sampling the variants")
-    # Memory checkpoint
-
     # Remove redundancies
     rm(sub_patho, sub_benign, benign_variants_sub, WEIGHTS)
     gc()
@@ -164,22 +128,10 @@ lasso_ensemble <- function(data,
     dat_out$Gene   <- NULL
 
 
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After creating in and out data frames")
-    # Memory checkpoint
-
     dat_boot <- list(training=data.frame(bind_rows(dat_in, dat_out), check.names=FALSE))
 
     rm(dat_in, dat_out)
     gc()
-
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After removing redundant data objects")
-    # Memory checkpoint
 
     dat_boot$training$Pathogenic <- factor(dat_boot$training$Pathogenic)
 
@@ -187,13 +139,6 @@ lasso_ensemble <- function(data,
     dat_boot$training_CADD <- na.omit(dat_boot$training[ , colnames(dat_boot$training) != "MetaSVM_rankscore"])
     dat_boot$training_CADD <- dat_boot$training_CADD %>% arrange(desc = GeneVariant)
     dat_boot$training <- NULL
-
-
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After creating the training object")
-    # Memory checkpoint
 
     # Split into features and class: training set
     # The long expression that gets assigned to X_train is the training data set:
@@ -203,11 +148,6 @@ lasso_ensemble <- function(data,
     X_train  <- (dat_boot$training_CADD %>% filter(weight %in% 1) %>% select(-c(GeneVariant, weight)))[,c(2:length(names(dat_boot$training_CADD %>% filter(weight %in% 1) %>% select(-c(GeneVariant, weight)))))]
     Y_train  <- as.factor((dat_boot$training_CADD %>% filter(weight %in% 1))[,"Pathogenic"])
     X_train  <- Matrix::as.matrix(X_train)
-
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After creating train and test objects")
 
 
     modelling_start_time <- Sys.time()
@@ -226,21 +166,12 @@ lasso_ensemble <- function(data,
     message(paste0("Modelling finished after ", paste(round(modelling_time_taken,2), units(modelling_time_taken), sep=" ")))
 
 
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After model was trained ")
-    # Memory checkpoint
-
     # Predict on the data
-    predictions <- as.factor(predict(model_glmnet, Matrix::as.matrix(dat_boot$training_CADD[,4:(length(names(dat_boot$training_CADD)))-1]), s="lambda.min", type="class"))
+    predictions <- as.factor(predict(model_glmnet,
+                                     Matrix::as.matrix(dat_boot$training_CADD[,4:(length(names(dat_boot$training_CADD)))-1]),
+                                     s="lambda.min",
+                                     type="class"))
 
-
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After predicting the unseen data")
-    # Memory checkpoint
 
     Coefs <- coef(model_glmnet, s="lambda.min")
 
@@ -253,13 +184,6 @@ lasso_ensemble <- function(data,
     Results %>%
       arrange(desc(abs(coefs)))  %>% filter(!features %in% "(Intercept)") -> varimp
 
-
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After settign up the coefficients table")
-    # Memory checkpoint
-
     rf_trees$CADD_expression[match(dat_boot$training_CADD$GeneVariant[dat_boot$training_CADD$weight == 0], rf_trees$CADD_expression$GeneVariant), "predictNum"] <- rf_trees$CADD_expression[match(dat_boot$training_CADD$GeneVariant[dat_boot$training_CADD$weight == 0], rf_trees$CADD_expression$GeneVariant), "predictNum"] + as.numeric(as.character(predictions[dat_boot$training_CADD$weight == 0]))
 
     # Here we keep track of how and if a GeneVariant was "predicted" by teh classifier or not. Later, if this is 0, the Variant will be excluded.
@@ -269,19 +193,10 @@ lasso_ensemble <- function(data,
     rf_trees$CADD_expression_varimp[match((varimp$features), rf_trees$CADD_expression_varimp$Variable), "ntree"] <- rf_trees$CADD_expression_varimp[match((varimp$features), rf_trees$CADD_expression_varimp$Variable), "ntree"] + ifelse(varimp$coefs == 0, 0, 1)
 
 
-    # Memory checkpoint
-    time   = c(time, as.character(Sys.time()))
-    memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-    process_stage = c(process_stage, "After populating the results")
-    # Memory checkpoint
-
     # Remove redundancies from memory
     rm(dat_boot, Coefs, Results, varimp)
     gc()
 
-    rf_trees$time          <- time
-    rf_trees$memory        <- memory
-    rf_trees$process_stage <- process_stage
 
     rf_trees
   }
@@ -289,40 +204,17 @@ lasso_ensemble <- function(data,
 
   CADD   = list()
   varIMP = list()
-  TIME   = list()
-  MEMORY = list()
-  PROCESS = list()
-
-  # Memory checkpoint
-  time   = c(time, as.character(Sys.time()))
-  memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-  process_stage = c(process_stage, "First call after the LASSO loop")
-  # Memory checkpoint
 
   for (i in 1:bootstrap.rounds){
 
     CADD[[i]]   <- inbag[[i]]$CADD_expression[,c(3:4)]
     varIMP[[i]] <- inbag[[i]]$CADD_expression_varimp[,c(2:3)]
-    TIME[[i]]   <- inbag[[i]]$time
-    MEMORY[[i]] <- inbag[[i]]$memory
-    PROCESS[[i]]<- inbag[[i]]$process_stage
 
   }
 
   CADD             <- Reduce('+', CADD)
   varIMP           <- Reduce('+', varIMP)
   CADD_expression  <- cbind(inbag[[i]]$CADD_expression[,c(1,2)], CADD)
-
-
-  # TRACKING MEMORY
-  TIME <- Reduce('c', TIME)
-  MEMORY <- Reduce('c',MEMORY)
-  PROCESS <- Reduce('c', PROCESS)
-
-  time          <- c(time,TIME)
-  memory        <- c(memory, MEMORY)
-  process_stage <- c(process_stage, PROCESS)
-  # TRACKING MEMORY
 
 
   rf_trees                        <- list()
@@ -353,11 +245,5 @@ lasso_ensemble <- function(data,
   varimp       <- varimp[,c("Variable", "Rules", "CADD_expression")]
   varimp       <- varimp %>% arrange(desc(abs(as.numeric(as.character(CADD_expression)))))
 
-  # Memory checkpoint
-  time   = c(time, as.character(Sys.time()))
-  memory = c(memory, as.numeric(pryr::mem_used())/1000000)
-  process_stage = c(process_stage, "Checkpoint: LASSO finished")
-  # Memory checkpoint
-
-  list(accuracy=accuracy, varimp=varimp, time=time, memory=memory, process_stage=process_stage)
+  list(accuracy=accuracy, varimp=varimp)
 }

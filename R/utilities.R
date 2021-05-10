@@ -106,10 +106,79 @@ print.varpp <- function(x){
 
 
 
+#' Predict function for varppRule
+#'
+#' @param patient_data based on a patient .vcf file,
+#'                     a preprocessed inpout file that is annotated with GTEx and CADD scores
+#' @param hpo_term patient hpo terms
+#' @export
+predict.varppRule <- function(patient_data, hpo_term, predict=c("probability", "class")){
+
+  results = readRDS(paste0("/Volumes/Sebs_Harddrive/4-VARPP-server/shinyVARPP/GTEx/",hpo_term,"_RuleFit.rds"))
+  attr(results, "class") <- "varppRule" # This is legacy, as all results have been created with an old attribute name
+
+  # Prepare coefficients
+  rules <- results$RuleFit$varimp[grep("rule",results$RuleFit$varimp$Variable),] %>%
+    select(Description) %>%
+    unlist() %>%
+    as.character()
+
+  coefficients <- results$RuleFit$varimp[grep("rule",results$RuleFit$varimp$Variable),] %>%
+    select(Coefficient) %>%
+    unlist() %>%
+    as.numeric()
+
+
+
+  # Create Rule variables based on the patient data
+  for( i in 1:length(rules)){
+
+    if(grepl('CADD_raw_rankscore >', rule)) {
+      patient_data <-  cbind(patient_data, patient_data %>%
+                               mutate(!!rules[i] := ifelse(eval(parse(text=rules[i])), 1, 0 )) %>%
+                               select(!!rules[i]) )
+
+    }else{
+
+      patient_data <- cbind(patient_data,patient_data %>%
+                              mutate(!!rules[i] := ifelse(eval(parse(text=rules[i])), 0, 1 )) %>%
+                              select(!!rules[i]))
+    }
+
+  }
+
+  # Prediction step
+  features <- as.character(results$RuleFit$varimp$Variable)
+
+  # Make sure the rule variables are called the same in the feature set as they were called above in the matrix
+  features[grep("rule", results$RuleFit$varimp$Variable)] <-
+    as.character(results$RuleFit$varimp$Description[grep("rule", results$RuleFit$varimp$Variable)])
+
+  feature_vector <- results$RuleFit$varimp$Coefficient
+  names(feature_vector) <- features
+
+  # Here we return the probabilities for every variant to be pathogenic
+  patient_data$Prediction <- logit2prob(rowSums(as.matrix(patient_data[,features]) %*%diag(feature_vector)))
+
+  if(predict=="probability"){
+
+    patient_data[,c("Gene", "CADD_raw_rankscore", "Prediction")]
+
+  }else{
+
+    patient_data %>%
+      mutate(Prediction = ifelse(Prediction > 0.5, "Pathogenic", "Benign")) %>%
+      select(Gene, CADD_raw_rankscore, Prediction)
+  }
+
+
+}
+
+
 #====================================================================================================================
 
 
-#' Sampling and subsettign for the benign variant data
+#' Sampling and sub-setting for the benign variant data
 #'
 #' @param benign_data the subset of benign variants
 #' @param sampled_genes the sampled genes (with replacement) from the sampling step
