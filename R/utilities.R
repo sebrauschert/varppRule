@@ -112,9 +112,9 @@ print.varpp <- function(x){
 #'                     a preprocessed inpout file that is annotated with GTEx and CADD scores
 #' @param hpo_term patient hpo terms
 #' @export
-predict.varppRule <- function(patient_data, hpo_term, predict=c("probability", "class")){
+predict.varppRule <- function(patient_data, model_results, predict=c("probability", "class")){
 
-  results = readRDS(paste0("/Volumes/Sebs_Harddrive/4-VARPP-server/shinyVARPP/GTEx/",hpo_term,"_RuleFit.rds"))
+  results = model_results
   attr(results, "class") <- "varppRule" # This is legacy, as all results have been created with an old attribute name
 
   # Prepare coefficients
