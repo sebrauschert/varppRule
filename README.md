@@ -27,7 +27,7 @@ The list of genes can either be retrieved manually from https://hpo.jax.org/, or
 
 ```r
 # Load the package
-library(varppRuleFit)
+library(varppRule)
 
 #---------------------------------------------------------------------------------
 
