@@ -9,6 +9,14 @@ Human interpretable predictive model for variant prioritisation of rare and othe
 </p>
 
 
+# Table of Contents
+1. [Installation](#installation)  
+2. [Run RuleFit](#run-rulefit)  
+3. [Run VARPP](#run-varpp)  
+4. [Results](#fourth-examplehttpwwwfourthexamplecom)  
+5. [Predict](#predict)   
+6. [License](#license)  
+
 ## Installation
 
 To install, type the following into `R` or `RStudio`:
