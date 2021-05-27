@@ -1,6 +1,6 @@
 #'varpp: VARiant Prioritisation by Phenotype
 #'
-#' @param HPO HPO term associated list of genes
+#' @param HPO_genes HPO term associated list of genes
 #' @param type the prediction data; either hcl (single cell) or gtex (tissue specific)
 #' @param ntree is the number of trees that should be built for ranger. It defaults to 1000
 #' @param max.depth is the maximum tree depth for the ranger trees. IT defaults to 3.
@@ -14,7 +14,7 @@
 #' @import foreach
 #' @importFrom iterators icount
 #' @export
-varpp <- function(HPO,
+varpp <- function(HPO_genes,
                   type="gtex",
                   ntree=500,
                   max.depth=NULL,
@@ -36,7 +36,7 @@ varpp <- function(HPO,
 
   message(paste0("VARPP initiated with ", ntree," trees, maximum depth of ", max.depth," and ",type," data."))
   # Get the gene names
-  hpo_gene_names <- HPO$Gene
+  hpo_gene_names <- HPO_genes
 
   # Filter the genes that we got from phenolyzer
   patho %>%

@@ -18,8 +18,7 @@ devtools::install_github("Hobbeist/varppRule")
 ```
 
 ## Human Phenotype Ontology and related genes  
-In order to run RuleFit and VARPP and get a prediction for pathogenic variants, one needs to retrieve a list of genes that are associated with the 
-HPO term of interest. Just provide a vector of genes to the model and it will return the prediction.
+In order to run RuleFit and VARPP and get a prediction for pathogenic variants, one needs to retrieve a list of genes that are associated with the HPO term of interest. Just provide a vector of genes to the model and it will return the prediction.
 
 The list of genes can either be retrieved manually from https://hpo.jax.org/, or by using the `phenolyzer` software.
 
@@ -34,7 +33,7 @@ library(varppRuleFit)
 
 # Run the function
 
-rulefit_results <- rule_fit(HPO,
+rulefit_results <- rule_fit(HPO_genes,
                             ntree = 200,
                             max.depth = 3,
                             rule.filter = 10,
@@ -50,7 +49,7 @@ rulefit_results <- rule_fit(HPO,
 ## Run VARPP
 ```r
 
-varpp_results <- varpp(HPO,
+varpp_results <- varpp(HPO_genes,
                        ntree = 2000,
                        max.depth = NULL,
                        cores = 4

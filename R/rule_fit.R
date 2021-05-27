@@ -3,7 +3,7 @@
 #' This is rulefit in general. When not using the VARPP framework, this function allows to perform rulefit on any data set with a
 #' binary outcome.
 #'
-#' @param HPO HPO term associated list of genes
+#' @param HPO_genes HPO term associated list of genes
 #' @param type the prediction data; either hcl (single cell) or gtex (tissue specific)
 #' @param ntree number of trees to be built, defaults to 200
 #' @param max.depth maximum tree depth, defaults to 3
@@ -38,7 +38,7 @@
 #' @import tidyr
 #' @import tidyselect
 #' @export
-rule_fit <- function(HPO,
+rule_fit <- function(HPO_genes,
                      type = "gtex",
                      ntree = 200,
                      max.depth = 3,
@@ -80,7 +80,7 @@ rule_fit <- function(HPO,
 
   y = "Pathogenic"
   # Get the gene names
-  hpo_gene_names <- HPO$Gene
+  hpo_gene_names <- HPO_genes
 
   # Filter the genes that we got from phenolyzer
   patho %>%
