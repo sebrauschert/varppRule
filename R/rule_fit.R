@@ -61,7 +61,7 @@ rule_fit <- function(HPO_genes,
   start_time <- Sys.time()
 
   # # Function checklist and stop commands for missing values
-  if(is.null(HPO))
+  if(is.null(HPO_genes))
     stop("HPO genes list not provided")
 
   #========================================================================================
@@ -117,7 +117,7 @@ rule_fit <- function(HPO_genes,
       # Bootstrap rounds is a new addition as I try to save the dat_boot oject for
       # the lasso step; the lasso step currently does the exact same sampling as we do here, which should not be necessary.
       # There is, however, an additional element of randomness in the model when doing the sampling again later. Maybe revise?
-      varpp_plus_rules <- varpp(HPO,
+      varpp_plus_rules <- varpp(HPO_genes,
                                      ntree = ntree,
                                      max.depth = max.depth,
                                      cores = rule.extract.cores,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/utilities.R
 \name{.sample_benign_variants}
 \alias{.sample_benign_variants}
-\title{Sampling and subsettign for the benign variant data}
+\title{Sampling and sub-setting for the benign variant data}
 \usage{
 .sample_benign_variants(benign_data, sampled_genes)
 }
@@ -15,5 +15,5 @@
 a list of randomly sampled gene variants, without replacement
 }
 \description{
-Sampling and subsettign for the benign variant data
+Sampling and sub-setting for the benign variant data
 }

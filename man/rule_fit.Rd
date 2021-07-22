@@ -5,7 +5,7 @@
 \title{The RuleFit function}
 \usage{
 rule_fit(
-  HPO,
+  HPO_genes,
   type = "gtex",
   ntree = 200,
   max.depth = 3,
@@ -18,7 +18,7 @@ rule_fit(
 )
 }
 \arguments{
-\item{HPO}{HPO term associated list of genes}
+\item{HPO_genes}{HPO term associated list of genes}
 
 \item{type}{the prediction data; either hcl (single cell) or gtex (tissue specific)}
 

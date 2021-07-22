@@ -4,10 +4,10 @@
 \alias{varpp}
 \title{varpp: VARiant Prioritisation by Phenotype}
 \usage{
-varpp(HPO, type = "gtex", ntree = 500, max.depth = NULL, cores = 4)
+varpp(HPO_genes, type = "gtex", ntree = 500, max.depth = NULL, cores = 4)
 }
 \arguments{
-\item{HPO}{HPO term associated list of genes}
+\item{HPO_genes}{HPO term associated list of genes}
 
 \item{type}{the prediction data; either hcl (single cell) or gtex (tissue specific)}
 
