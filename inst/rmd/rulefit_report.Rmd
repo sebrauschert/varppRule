@@ -44,7 +44,7 @@ library(varppRule)
 library(knitr)
 library(DT)
 library(rclipboard)
-rclipboardSetup()
+library(shiny)
 ```
 
 # {.tabset .tabset-fade}
@@ -63,7 +63,7 @@ rclipboardSetup()
 ## Gene Panel 
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
-
+rclipboardSetup()
 SUMS <- params$DATA_all %>% 
       select(starts_with("rule")) %>% 
       rowSums()
