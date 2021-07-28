@@ -2,9 +2,9 @@
 #'
 #' This function performs nested cross validation on the generated rule data set. It is the final step in the rulefit algorithm and returns the predictions
 #'
-#' @param data is a list of data with the rules added. The benign and the pathogenic variants files are necessery for the sampling.
+#' @param data is a list of data with the rules added. The benign and the pathogenic variants files are necessary for the sampling.
 #' @param rules is the list of rules that were generated in the varpp function. This is necessary for the annotation of the final results.
-#' @param bootstrap.rounds number of bootstrap rounds for the outer loop of the LASSO cross-validation, defaults to 100
+#' @param bootstrap.rounds number of bootstrap rounds for the outer loop of the LASSO cross-validation, defaults to 100.
 #' @param cores number of cores for parallel, defaults to 4
 #' @return A list of predictions for the CADD raw rankscore and the tissue/cell specific expression added. Further, a variable importance list for all rules and variables tested.
 #'
@@ -25,8 +25,8 @@ lasso_ensemble <- function(data,
 
 
   # Specify benign and pathogenic gene names for sampling
-  cls_pathogenic_genes = unique(data$dat$Gene[data$dat$Pathogenic %in% 1])
-  cls_benign_genes     = unique(data$dat$Gene[data$dat$Pathogenic %in% 0])
+  cls_pathogenic_genes <- unique(data$dat$Gene[data$dat$Pathogenic %in% 1])
+  cls_benign_genes     <- unique(data$dat$Gene[data$dat$Pathogenic %in% 0])
 
 
   #=====================================================================================
@@ -45,12 +45,9 @@ lasso_ensemble <- function(data,
     Variable=c("CADD_raw_rankscore", colnames(data$dat)[!colnames(data$dat) %in% "Gene"]),
     sumVarimp=vector(length=length(colnames(data$dat)[!colnames(data$dat) %in%  "Gene"]) + 1, mode="numeric"),
     ntree=vector(length=length(colnames(data$dat)[!colnames(data$dat) %in% "Gene"]) + 1, mode="numeric"),
-
     stringsAsFactors=FALSE)
 
-  rf_trees$time <- NULL
-  rf_trees$memory <- NULL
-  rf_trees$process_stage <- NULL
+
 
   #==========================================================================================
   # THE SAMPLING LOOP
@@ -67,9 +64,7 @@ lasso_ensemble <- function(data,
 
   inbag <- foreach (j = 1:bootstrap.rounds) %dopar% {
 
-
-    print(paste0("Fold:", j))
-    cls_patho   <- sample(cls_pathogenic_genes, replace=TRUE)
+    cls_patho <- sample(cls_pathogenic_genes, replace=TRUE)
 
     sub_patho <- lapply(cls_patho, FUN=function(x) data$disease_variants[which(data$disease_variants$Gene == x), "GeneVariant"])
     sub_patho <- lapply(sub_patho, FUN=function(x) sample(x, size=1))
@@ -87,9 +82,7 @@ lasso_ensemble <- function(data,
 
     # This is still necessary to make sure that only one variant is ever selected per gene
     sub_benign <- sub_benign[match(gsub("_.*$", "", sub_benign), gsub("_.*$", "", sub_benign))]
-
-
-    WEIGHTS = rbind(data.frame(plyr::count(sub_benign)),data.frame(plyr::count(sub_patho)))
+    WEIGHTS    <- rbind(data.frame(plyr::count(sub_benign)),data.frame(plyr::count(sub_patho)))
 
     # The merge function does not preserve the order of the original 'dat' data.frame.
     # That means, the sampling inbag order I use to subset later is not in the right order
@@ -99,7 +92,7 @@ lasso_ensemble <- function(data,
     weighted_data <- merge(data$dat, WEIGHTS, by.x="GeneVariant", by.y="x", all=T)
     data$dat$id   <- NULL
     weighted_data <- weighted_data[order(weighted_data$id), ] %>% select(-id)
-    inbag <-
+    inbag         <-
       as.numeric(unlist(weighted_data %>%
                           #select(-x) %>%
                           mutate(freq = ifelse(freq %in% NA, 0, freq)) %>%
@@ -138,7 +131,7 @@ lasso_ensemble <- function(data,
     # Random forest does not handle missing data
     dat_boot$training_CADD <- na.omit(dat_boot$training[ , colnames(dat_boot$training) != "MetaSVM_rankscore"])
     dat_boot$training_CADD <- dat_boot$training_CADD %>% arrange(desc = GeneVariant)
-    dat_boot$training <- NULL
+    dat_boot$training      <- NULL
 
     # Split into features and class: training set
     # The long expression that gets assigned to X_train is the training data set:
@@ -188,18 +181,17 @@ lasso_ensemble <- function(data,
 
     # Here we keep track of how and if a GeneVariant was "predicted" by teh classifier or not. Later, if this is 0, the Variant will be excluded.
     rf_trees$CADD_expression[match(dat_boot$training_CADD$GeneVariant[dat_boot$training_CADD$weight == 0], rf_trees$CADD_expression$GeneVariant), "predictDenom"] <- rf_trees$CADD_expression[match(dat_boot$training_CADD$GeneVariant[dat_boot$training_CADD$weight == 0], rf_trees$CADD_expression$GeneVariant), "predictDenom"] + 1
-    rf_trees$CADD_expression_varimp[match(as.character(varimp$features), rf_trees$CADD_expression_varimp$Variable), "sumVarimp"] <- rf_trees$CADD_expression_varimp[match(as.character(varimp$features), rf_trees$CADD_expression_varimp$Variable), "sumVarimp"] + as.numeric((varimp$coefs))# CADD_expression_predict$variable.importance
-
+    rf_trees$CADD_expression_varimp[match(as.character(varimp$features), rf_trees$CADD_expression_varimp$Variable), "sumVarimp"] <- rf_trees$CADD_expression_varimp[match(as.character(varimp$features), rf_trees$CADD_expression_varimp$Variable), "sumVarimp"] + as.numeric((varimp$coefs))
     rf_trees$CADD_expression_varimp[match((varimp$features), rf_trees$CADD_expression_varimp$Variable), "ntree"] <- rf_trees$CADD_expression_varimp[match((varimp$features), rf_trees$CADD_expression_varimp$Variable), "ntree"] + ifelse(varimp$coefs == 0, 0, 1)
 
-
-    # Remove redundancies from memory
+     # Remove redundancies from memory
     rm(dat_boot, Coefs, Results, varimp)
     gc()
 
 
     rf_trees
   }
+
   stopCluster(cl)
 
   CADD   = list()
@@ -234,8 +226,8 @@ lasso_ensemble <- function(data,
                                                         data$benign_variants[ , c("GeneVariant", "CADD_raw_rankscore")]),
                     by.x="GeneVariant", by.y="GeneVariant", all.x=TRUE, all.y=FALSE)
 
-  varimp <- data.frame(Variable=rf_trees$CADD_expression_varimp[,1],
-                       CADD_expression=rf_trees$CADD_expression_varimp[,2]/rf_trees$CADD_expression_varimp$ntree)#,
+  varimp <- data.frame(Variable = rf_trees$CADD_expression_varimp[,1],
+                       CADD_expression = rf_trees$CADD_expression_varimp[,2]/rf_trees$CADD_expression_varimp$ntree)
 
 
 
@@ -245,5 +237,17 @@ lasso_ensemble <- function(data,
   varimp       <- varimp[,c("Variable", "Rules", "CADD_expression")]
   varimp       <- varimp %>% arrange(desc(abs(as.numeric(as.character(CADD_expression)))))
 
-  list(accuracy=accuracy, varimp=varimp)
+  list(accuracy = accuracy,
+       varimp = varimp)
 }
+
+
+
+
+#===========#
+#           #
+#  /(_M_)\  #
+# |       | #
+#  \/~V~\/  #
+#           #
+#===========#

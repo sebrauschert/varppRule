@@ -16,5 +16,5 @@ varpp_for_rulefit(dat, ntree, max.depth, cores)
 \item{cores}{number of cores for parallel, defaults to 4}
 }
 \description{
-varpp: extract rules from ranger trees
+This function is meant to only be used internally for the rule_fit function
 }

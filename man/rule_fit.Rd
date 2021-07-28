@@ -6,6 +6,7 @@
 \usage{
 rule_fit(
   HPO_genes,
+  HPO_term_name = "custom",
   type = "gtex",
   ntree = 200,
   max.depth = 3,
@@ -13,36 +14,33 @@ rule_fit(
   bootstrap.rounds = 100,
   rule.extract.cores = 4,
   kappa.cores = 2,
-  lasso.cores = 4,
-  ranger.and.rulefit = FALSE
+  lasso.cores = 4
 )
 }
 \arguments{
-\item{HPO_genes}{HPO term associated list of genes}
+\item{HPO_genes}{HPO term associated list of genes, or any list of patient genes.}
 
-\item{type}{the prediction data; either hcl (single cell) or gtex (tissue specific)}
+\item{HPO_term_name}{In case the model is for one specific HPO term, this can be provided, otherwise it is assigned as "custom"}
 
-\item{ntree}{number of trees to be built, defaults to 200}
+\item{type}{the prediction data; either hcl (single cell) or gtex (tissue specific).}
 
-\item{max.depth}{maximum tree depth, defaults to 3}
+\item{ntree}{number of trees to be built, defaults to 200.}
 
-\item{rule.filter}{filter the top n rules based on kappa statistic. If NULL, the rules are filter above a kappa of 0.05}
+\item{max.depth}{maximum tree depth, defaults to 3.}
 
-\item{bootstrap.rounds}{number of bootstrap rounds for the outer loop of the LASSO cross-validation, defaults to 100}
+\item{rule.filter}{filter the top n rules based on kappa statistic. If NULL, the rules are filter above a kappa of 0.05.}
 
-\item{rule.extract.cores}{number of cores for parallel, defaults to 4. This is specifically for the varpp rule extract step (less memory hungry than the cv.glmnet step)}
+\item{bootstrap.rounds}{number of bootstrap rounds for the outer loop of the LASSO cross-validation, defaults to 100.}
 
-\item{kappa.cores}{number of cores used for the rule filtering by kappa. This needs to be seperate, as it is quite memory intensive when the input + rule data is very large. Defaults to 2.}
+\item{rule.extract.cores}{number of cores for parallel, defaults to 4. This is specifically for the varpp rule extract step (less memory hungry than the cv.glmnet step).}
 
-\item{lasso.cores}{number of cores for the cv.glmnet step, as this is quite memory hungry, it is seperated}
+\item{kappa.cores}{number of cores used for the rule filtering by kappa. This needs to be separate, as it is quite memory intensive when the input + rule data is very large. Defaults to 2.}
 
-\item{ranger.and.rulefit}{in some cases, if not all, we want to be able to report the Random forest and the RuleFit accuracy together, to see how much better one performs over the other.
-This defaults to TRUE}
+\item{lasso.cores}{number of cores for the cv.glmnet step, as this is quite memory hungry, it is separated.}
 }
 \value{
 A list of predictions for the outcome. Further, a variable importance list for all rules and variables tested.
 }
 \description{
-This is rulefit in general. When not using the VARPP framework, this function allows to perform rulefit on any data set with a
-binary outcome.
+RuleFit creates variant predictions and human interpretable rules
 }

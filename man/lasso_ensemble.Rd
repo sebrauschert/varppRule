@@ -7,11 +7,11 @@
 lasso_ensemble(data, rules, bootstrap.rounds, cores)
 }
 \arguments{
-\item{data}{is a list of data with the rules added. The benign and the pathogenic variants files are necessery for the sampling.}
+\item{data}{is a list of data with the rules added. The benign and the pathogenic variants files are necessary for the sampling.}
 
 \item{rules}{is the list of rules that were generated in the varpp function. This is necessary for the annotation of the final results.}
 
-\item{bootstrap.rounds}{number of bootstrap rounds for the outer loop of the LASSO cross-validation, defaults to 100}
+\item{bootstrap.rounds}{number of bootstrap rounds for the outer loop of the LASSO cross-validation, defaults to 100.}
 
 \item{cores}{number of cores for parallel, defaults to 4}
 }

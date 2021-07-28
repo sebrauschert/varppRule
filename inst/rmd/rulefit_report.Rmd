@@ -16,13 +16,9 @@ params:
   rules: NA
   ntree: NA
   maxdepth: NA
-  RF_results: NA
   RuleFit_results: NA
-  RF_roc: NA
-  RF_prc: NA
   RuleFit_roc: NA
   RuleFit_prc: NA
-  time_taken: NA
   auprcpp100: NA
   bootstrap_rounds: NA
   HPO_term_name: NA
@@ -43,7 +39,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(plotly)
 library(lubridate)
-library(varppRuleFit)
+library(varppRule)
 library(knitr)
 library(DT)
 ```
@@ -89,8 +85,8 @@ params$density_plot
 ### Ratio Plot
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-ggplotly(
-params$patho_ratio)
+try(ggplotly(
+params$patho_ratio))
 ```
 
 ### Misclassified positives
@@ -181,9 +177,6 @@ __`max.depth`:__
 
 __Number of models in`LASSO` ensemble:__    
 `r params$bootstrap_rounds`
-
-__Modelling time:__    
-`r params$time_taken`
 
 </details>
 

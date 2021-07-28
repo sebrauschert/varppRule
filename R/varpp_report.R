@@ -23,41 +23,19 @@ varpp_report <- function(results,
     # Specify the outcome variable
     y = results$y
 
-    if(results$ranger.and.rulefit == TRUE){
-      table_function <- auPRC_table
+    table_function <- performance
 
-      # Pathogenic Variants: Specify for the score to be above 0.5, which means more than 50% of the predictions classified the variant as pathogenic.
-      all_res <- merge(results$RandomForest$accuracy, results$RuleFit$accuracy[,c(gene_var, names(results$RuleFit$accuracy)[3])], by = gene_var, all = TRUE)
-      all_res <- all_res %>%
-        rename(RandomForestScore = rf_results) %>%
-        rename(RuleFitScore = CADD_expression) %>%
-        filter(!RuleFitScore %in% NA)
-        #filter(RuleFitScore > .threshold(results$RuleFit$accuracy[,2], results$RuleFit$accuracy[,3]))
-
-    }else{
-
-      table_function <- performance
-
-      # Pathogenic Variants: Specify for the score to be above 0.5, which means more than 50% of the predictions classified the variant as pathogenic.
-      all_res <- results$RuleFit$accuracy[,c(gene_var,y, "CADD_expression", "CADD_raw_rankscore")]
-      all_res <- all_res %>%
+    # Pathogenic Variants: Specify for the score to be above 0.5, which means more than 50% of the predictions classified the variant as pathogenic.
+    all_res <- results$RuleFit$accuracy[,c(gene_var,y, "CADD_expression", "CADD_raw_rankscore")]
+    all_res <- all_res %>%
         rename(RuleFitScore = CADD_expression) %>%
         filter(RuleFitScore > .threshold(results$RuleFit$accuracy[,2], results$RuleFit$accuracy[,3]))
 
-    }
 
-
-
-    if(results$two_level_bootstrap %in% FALSE){
     # Create a data set to show the ratio of predicted classes in the rules versus actual classes
-    DATA_all <- results$RuleData[,c(1,2,grep("rule",names(results$RuleData)))]
-
-    }else{
-
-      DATA_all <- results$RuleData[,c(2,3,grep("rule",names(results$RuleData)))]
+    DATA_all <- results$RuleData[,c(1,2,3,grep("rule",names(results$RuleData)))]
 
 
-    }
     # Create a data table element with all the pathogenic Variants, that neither of the rules was able to classify as pathogenic
     DATA_patho <- DATA_all %>%
       filter(get(y) %in% 1)
@@ -73,7 +51,7 @@ varpp_report <- function(results,
 
       all_res = datatable(all_res, style='bootstrap4', extensions = 'Buttons', options = list(
         dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))),
-      auprcpp100 = datatable(table_function(results), style='bootstrap4',extensions = 'Buttons', options = list(
+        auprcpp100 = datatable(table_function(results), style='bootstrap4',extensions = 'Buttons', options = list(
         dom = 'Bfrtip',buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))),
 
       # Rule Results
@@ -92,12 +70,11 @@ varpp_report <- function(results,
       RuleFit_results = metrics(results),
       RuleFit_roc     = auROC(results, model = "rulefit"),
       RuleFit_prc     = auPRC(results, model = "rulefit"),
-      time_taken      = paste(round(results$duration,2), units(results$duration), sep=" "),
 
 
       density_plot =
         TEST %>%
-        ggplot(aes(x=predictions)) +
+        ggplot(aes(x = predictions)) +
         geom_density(aes(x=predictions, y=..scaled.., fill=as.factor(pathogenic)), alpha=1/2) +
         theme_minimal() +
         scale_fill_discrete(name = y, labels = c("negative", "positive")) +
@@ -105,7 +82,7 @@ varpp_report <- function(results,
 
       patho_ratio =
         DATA_all %>%
-        tidyr::gather(key = "rule", value, 3:12) %>%
+        tidyr::gather(key = "rule", value, 4:12) %>%
         mutate(value=as.factor(value)) %>%
         group_by(!!! rlang::syms(y), rule, value) %>%
         summarise(n = n()) %>%
@@ -119,22 +96,14 @@ varpp_report <- function(results,
         facet_wrap(~get(y)) +
         theme(axis.text.x = element_text(angle = 45)),
 
-      missclass_patho = datatable(data.frame(Misclassified_positives = DATA_patho[which(rowSums(DATA_patho[,grep("rule",names(DATA_patho))]) ==0), 1]),
+      missclass_patho = datatable(data.frame(Misclassified_positives = DATA_patho[which(rowSums(DATA_patho[,grep("rule",names(DATA_patho))]) == 0), 1]),
                                   style='bootstrap4', extensions = 'Buttons', options = list(
         dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))),
+
       # Kappa plot for all rules
       kappa_plot = results$rule_kappas
-      #memory_usage = Mem_check
 
     )
-
-    if(!is.null(results$RandomForest)){
-      params$RF_results      = metrics(results)$RandomForest
-      params$RF_roc          = auROC(results, model = "rf")
-      params$RF_prc          = auPRC(results, model = "rf")
-      params$RuleFit_results = metrics(results)$RuleFit
-
-    }
 
     if(is.null(report_filename)){
       report_filename <- getwd()
@@ -144,7 +113,7 @@ varpp_report <- function(results,
     # Knit the document, passing in the `params` list, and eval it in a
     # child of the global environment (this isolates the code in the document
     # from the code in this app).
-    tempReportRmd <- system.file("rmd", "rulefit_report.Rmd", package = "varppRuleFit")
+    tempReportRmd <- system.file("rmd", "rulefit_report.Rmd", package = "varppRule")
     suppressMessages(rmarkdown::render(input         = tempReportRmd,
                       output_format = "html_document",
                       output_file   = paste0(report_filename,"_ruleFit_report.html"),
@@ -152,4 +121,12 @@ varpp_report <- function(results,
                       params        = params,
                       envir         = new.env(parent = globalenv()),
                       quiet         = TRUE))
-  }
+}
+
+#===========#
+#           #
+#  /(_M_)\  #
+# |       | #
+#  \/~V~\/  #
+#           #
+#===========#

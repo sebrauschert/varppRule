@@ -2,7 +2,7 @@
 % Please edit documentation in R/varpp.R
 \name{varpp}
 \alias{varpp}
-\title{varpp: VARiant Prioritisation by Phenotype}
+\title{Based on the original VARPP paper, this algorithm is the parallelised and updated version of the model}
 \usage{
 varpp(HPO_genes, type = "gtex", ntree = 500, max.depth = NULL, cores = 4)
 }
@@ -18,5 +18,5 @@ varpp(HPO_genes, type = "gtex", ntree = 500, max.depth = NULL, cores = 4)
 \item{cores}{number of cores for parallel, defaults to 4}
 }
 \description{
-varpp: VARiant Prioritisation by Phenotype
+Based on the original VARPP paper, this algorithm is the parallelised and updated version of the model
 }

@@ -1,4 +1,6 @@
-#'varpp: VARiant Prioritisation by Phenotype
+# 'varpp: VARiant Prioritisation by Phenotype
+#'
+#' Based on the original VARPP paper, this algorithm is the parallelised and updated version of the model
 #'
 #' @param HPO_genes HPO term associated list of genes
 #' @param type the prediction data; either hcl (single cell) or gtex (tissue specific)
@@ -15,10 +17,30 @@
 #' @importFrom iterators icount
 #' @export
 varpp <- function(HPO_genes,
-                  type="gtex",
-                  ntree=500,
-                  max.depth=NULL,
-                  cores=4){
+                  type = "gtex",
+                  ntree = 500,
+                  max.depth = NULL,
+                  cores = 4){
+
+  #========================================================================================
+  # Checks
+  #========================================================================================
+
+  # Time measurement
+  start_time <- Sys.time()
+
+  # # Function checklist and stop commands for missing values
+  if(is.null(HPO_genes))
+    stop("HPO genes list not provided")
+
+  if(is.null(ntree))
+    stop("Please specify the number of trees for the model")
+
+  if(is.null(max.depth))
+    stop("Please specify the max.depth for the model")
+
+  if(is.null(type))
+    stop("Please specify the data type as either 'gtex' or 'hcl'")
 
   #=====================================================================================
   # Prepare the data
@@ -29,8 +51,8 @@ varpp <- function(HPO_genes,
     patho  <- patho_gtex
     benign <- benign_gtex
   } else {
-    patho  = patho_hcl
-    benign = benign_hcl
+    patho  <- patho_hcl
+    benign <- benign_hcl
   }
 
 
@@ -235,7 +257,7 @@ varpp <- function(HPO_genes,
                        rf_results=rf_trees$rf_results_varimp$sumVarimp/rf_trees$rf_results_varimp$ntree)#,
 
   # Combine the rules
-  RULES        <- do.call(c, RULES) #Reduce(c,inbag)
+  RULES        <- do.call(c, RULES)
   names(RULES) <- paste0("rule_",1:length(RULES))
 
 
@@ -245,3 +267,12 @@ varpp <- function(HPO_genes,
   return(results)
 
 }
+
+
+#===========#
+#           #
+#  /(_M_)\  #
+# |       | #
+#  \/~V~\/  #
+#           #
+#===========#
