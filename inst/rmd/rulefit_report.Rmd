@@ -59,6 +59,11 @@ library(DT)
 <br></br>
 
 ## Gene Panel 
+<br></br>
+
+`r rclipButton("clipbtn", "Copy Gene Panel", paste0(genes, collapse="\n"))`
+
+<br></br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
 library(tidyverse)
