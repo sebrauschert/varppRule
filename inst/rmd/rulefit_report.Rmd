@@ -91,12 +91,11 @@ for (i in genes){
 
 ## Predicted Variants 
 
-These are the predictions based on `varppRuleFit`. Predictions are reported from  `Random Forest` and `RuleFit`.
+These are the predictions based on `varppRule`.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 params$all_res
 ```
-
 
 
 ## Prediction Rules {.tabset .tabset-fade}
@@ -126,15 +125,6 @@ params$patho_ratio))
 params$missclass_patho
 ```
 
-## auPRC and PP100
-
-As per [Anderson, D., Baynam, G., Blackwell, J.M. et al. Personalised analytics for rare disease diagnostics. Nat Commun 10, 5274 (2019). https://doi.org/10.1038/s41467-019-13345-5](https://www.nature.com/articles/s41467-019-13345-5)  
-
-<blockquote>The R `precrec` package [is] used to calculate the area under the precision-recall curve (`auPRC`) based on the interpolation method of Davis & Goadrich. [...][the] focus [is] on the auPRC rather than the area under the receiver operating characteristic curve (auROC), due to the inherently imbalanced ratio of pathogenic to benign variants. In addition to the auPRC, [...] the proportion of true pathogenic variants (i.e. ClinVar pathogenic variants) in the top 100 predictions of pathogenicity (referred to as PP100 [...]) [is calculated]. This measure focuses on the top ranked variants as these are more likely to be considered for follow-up.</blockquote>  
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-params$auprcpp100
-```
 
 ## Prediction Measures {.tabset .tabset-pills .tabset-fade}
 
@@ -159,40 +149,6 @@ params$RuleFit_roc
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 params$RuleFit_prc
-```
-
-## Kappa plot for Rules
-
-This plot shows the sorted Cohen's $\kappa$ values and the rule numbers. 
-
-```{r eval=TRUE, echo=FALSE, message=FALSE, warning=FALSE}
-#plot(sort(params$kappa_plot), ylab="Cohen's Kappa", xlab="Rules, sorted by Cohen's Kappa")
-#abline(h=0.05, col="red")
-
-TEST       <- data.frame(params$kappa_plot)
-TEST$index <- c(1: dim(TEST)[1])
-
-f <- list(
-  family = "Courier New, monospace",
-  size = 18,
-  color = "#7f7f7f"
-)
-x <- list(
-  title = "",
-  titlefont = f
-)
-y <- list(
-  title = "Kappa",
-  titlefont = f
-)
-
-suppressMessages(plotly::plot_ly(data = TEST, 
-                x = ~index, 
-                y = ~params$kappa_plot,
-                # Hover text:
-  text = ~paste("Kappa: ", params$kappa_plot, "<br>Rule: ", rownames(TEST))) %>% 
-  layout(xaxis = x, yaxis = y))
-
 ```
 
 
