@@ -101,7 +101,8 @@ varpp_report <- function(results,
         dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print'))),
 
       # Kappa plot for all rules
-      kappa_plot = results$rule_kappas
+      kappa_plot = results$rule_kappas,
+      DATA_all = DATA_all
 
     )
 

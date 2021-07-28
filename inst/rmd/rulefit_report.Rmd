@@ -57,6 +57,35 @@ library(DT)
 
 <br></br>
 
+## Gene Panel
+```{r results="asis"}
+library(tidyverse)
+
+SUMS <- params$DATA_all %>% 
+      select(starts_with("rule")) %>% 
+      rowSums()
+
+number_of_rules <- as.integer(dim(params$DATA_all %>% 
+                                          select(starts_with("rule")))[2])/2
+      
+      
+geneVar <-  params$DATA_all %>% 
+        mutate(Pred_number = SUMS) %>%
+        mutate(Prediction = ifelse(Pred_number >= number_of_rules, TRUE, FALSE)) %>%
+        filter(Prediction == TRUE) %>%
+        select(GeneVariant) %>%
+        unique() %>%
+        unlist() %>%
+        as.character()
+
+genes <- unique(unlist(lapply(geneVar, function(x) stringr::str_split(x, "_")[[1]][1] )))
+
+      
+for (i in genes){
+  cat('<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=',i,'&keywords=',i,'" target="blank_"><button class="cake"><b><h5>',i,'</h5></b></button></a>')
+  
+}
+```
 
 ## Predicted Variants 
 
