@@ -114,11 +114,7 @@ geneVar <-  params$DATA_all %>%
 genes <- unique(unlist(lapply(geneVar, function(x) stringr::str_split(x, "_")[[1]][1] )))
 ```
 
-<br></br>
 
-`r rclipButton("clipbtn", "Copy Gene Panel", paste0(genes, collapse="\n"), icon("clipboard"))`
-
-<br></br>
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
 
