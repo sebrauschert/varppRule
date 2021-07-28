@@ -29,6 +29,7 @@ params:
   patho_ratio: NA
   missclass_patho: NA
   density_plot: NA
+  DATA_all: NA
 title: "RuleFit Analysis Report for: [`r params$HPO_term_name`](`r paste0('https://hpo.jax.org/app/browse/term/',params$HPO_term_name)`)"
 ---
 
