@@ -58,8 +58,9 @@ library(DT)
 
 <br></br>
 
-## Gene Panel
-```{r results="asis"}
+## Gene Panel 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, results="asis"}
 library(tidyverse)
 
 SUMS <- params$DATA_all %>% 
@@ -83,7 +84,7 @@ genes <- unique(unlist(lapply(geneVar, function(x) stringr::str_split(x, "_")[[1
 
       
 for (i in genes){
-  cat('<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=',i,'&keywords=',i,'" target="blank_"><button class="cake"><b><h5>',i,'</h5></b></button></a>')
+  cat(paste0('<a href="https://www.genecards.org/cgi-bin/carddisp.pl?gene=',i,'&keywords=',i,'" target="blank_"><button class="cake"><b><h5>',i,'</h5></b></button></a>'))
   
 }
 ```
