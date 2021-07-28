@@ -60,7 +60,37 @@ library(shiny)
 
 <br></br>
 
-## Gene Panel 
+## Gene Panel {.tabset .tabset-fade}
+
+### Table 
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+SUMS <- params$DATA_all %>% 
+      select(starts_with("rule")) %>% 
+      rowSums()
+
+number_of_rules <- as.integer(dim(params$DATA_all %>% 
+                                          select(starts_with("rule")))[2])/2
+      
+      
+geneVar <-  params$DATA_all %>% 
+        mutate(Pred_number = SUMS) %>%
+        mutate(Prediction = ifelse(Pred_number >= number_of_rules, TRUE, FALSE)) %>%
+        filter(Prediction == TRUE) %>%
+        select(GeneVariant) %>%
+        unique() %>%
+        unlist() %>%
+        as.character()
+
+genes <- unique(unlist(lapply(geneVar, function(x) stringr::str_split(x, "_")[[1]][1] )))
+
+
+DT::datatable(data.frame(Gene_Panel = genes),  style='bootstrap4', extensions = 'Buttons', options = list(
+        dom = 'Bfrtip', buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
+```
+
+
+### Links
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 rclipboardSetup()
