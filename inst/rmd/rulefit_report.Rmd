@@ -61,7 +61,7 @@ library(rclipboard)
 
 ## Gene Panel 
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE, echo=FALSE}
 
 SUMS <- params$DATA_all %>% 
       select(starts_with("rule")) %>% 
