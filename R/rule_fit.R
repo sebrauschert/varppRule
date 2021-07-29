@@ -156,6 +156,10 @@ rule_fit <- function(HPO_genes,
   # We assign a 1 if the rule contains the assignment to 1, and for the alternative (if the rule is FALSE)
   # we record a 0. Hence we have two complimentary vectors for all rules. We save this in the final ruleFit object,
   # so we ca npredict with the ruls and assign the correct outcome.
+
+  # This selects only those rules that predict the outcome
+  rules <- rules[which(grepl('\"1\"', rules))]
+
   positive    <- as.vector(unlist(lapply(rules, function(x) if(grepl('\"1\"', x) %in% TRUE) return(1) else(return(0)) )))
   alternative <- as.vector(unlist(lapply(rules, function(x) if(grepl('\"1\"', x) %in% TRUE) return(0) else(return(1)) )))
 
@@ -180,7 +184,6 @@ rule_fit <- function(HPO_genes,
 
     }
   stopCluster(cl)
-
 
   # Name the positive and alternative variables like the rules, so they can be applied in the predict function
   names(positive)    <- names(rules)
@@ -210,7 +213,19 @@ rule_fit <- function(HPO_genes,
   #
   # TO DO: Implement a filter that excludes complimentary rules to remove redundant
   #        Information
-  rule_dat  <- rule_dat[!duplicated(as.list(rule_dat))]
+  #
+  # This is the solution to exclude both duplicated and complementary rules, as we exclude
+  # correlated rules. I believe there is really no case to be made for keeping completely correlated rules
+  # or complementary rules in the model. We want the model to be as "lean" as possible to perform at its
+  # best.
+
+  split_1     <- rule_dat[, -grep("rule", names(rule_dat))]
+  split_2     <- rule_dat[, grep("rule", names(rule_dat))]
+  split_2     <- split_2[, -caret::findCorrelation(cor(split_2))] # maybe just copy the code from caret?
+  rule_dat         <- cbind(split_1, split_2)
+
+  # This is the old function to simply remove duplicated rules.
+  #rule_dat  <- rule_dat[!duplicated(as.list(rule_dat))]
 
   # Save the total number of Rules
   total_rules_without_duplicates <- dim(rule_dat)[2]
