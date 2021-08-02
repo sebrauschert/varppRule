@@ -7,7 +7,9 @@
 rule_fit(
   HPO_genes,
   HPO_term_name = "custom",
-  type = "gtex",
+  type = c("gtex", "hcl", "custom"),
+  user_patho = NULL,
+  user_benign = NULL,
   ntree = 200,
   max.depth = 3,
   rule.filter = 10,
@@ -22,7 +24,11 @@ rule_fit(
 
 \item{HPO_term_name}{In case the model is for one specific HPO term, this can be provided, otherwise it is assigned as "custom"}
 
-\item{type}{the prediction data; either hcl (single cell) or gtex (tissue specific).}
+\item{type}{the prediction data; either hcl (single cell), gtex (tissue specific) or custom (requires the user to provide custom_patho and custom_benign).}
+
+\item{user_patho}{a user provided file for the pathogenic variants. This needs to have the following first few columns:Gene, GeneVariant, CADD_raw_rankscore, CADD_PHRED_SCORE, Pathogenic, gene_id,gene_biotype}
+
+\item{user_benign}{a user provided file for the benign variants. This needs to have the following first few columns:Gene, GeneVariant, CADD_raw_rankscore, CADD_PHRED_SCORE, Pathogenic, gene_id,gene_biotype}
 
 \item{ntree}{number of trees to be built, defaults to 200.}
 

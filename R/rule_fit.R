@@ -5,7 +5,9 @@
 #'
 #' @param HPO_genes HPO term associated list of genes, or any list of patient genes.
 #' @param HPO_term_name In case the model is for one specific HPO term, this can be provided, otherwise it is assigned as "custom"
-#' @param type the prediction data; either hcl (single cell) or gtex (tissue specific).
+#' @param type the prediction data; either hcl (single cell), gtex (tissue specific) or custom (requires the user to provide custom_patho and custom_benign).
+#' @param user_patho a user provided file for the pathogenic variants. This needs to have the following first few columns:Gene, GeneVariant, CADD_raw_rankscore, CADD_PHRED_SCORE, Pathogenic, gene_id,gene_biotype
+#' @param user_benign a user provided file for the benign variants. This needs to have the following first few columns:Gene, GeneVariant, CADD_raw_rankscore, CADD_PHRED_SCORE, Pathogenic, gene_id,gene_biotype
 #' @param ntree number of trees to be built, defaults to 200.
 #' @param max.depth maximum tree depth, defaults to 3.
 #' @param rule.filter filter the top n rules based on kappa statistic. If NULL, the rules are filter above a kappa of 0.05.
@@ -35,7 +37,9 @@
 #' @export
 rule_fit <- function(HPO_genes,
                      HPO_term_name = "custom",
-                     type = "gtex",
+                     type = c("gtex", "hcl", "custom"),
+                     user_patho = NULL,
+                     user_benign = NULL,
                      ntree = 200,
                      max.depth = 3,
                      rule.filter = 10,
@@ -43,7 +47,7 @@ rule_fit <- function(HPO_genes,
                      rule.extract.cores = 4,
                      kappa.cores = 2,
                      lasso.cores = 4
-                    ){
+){
 
 
   #========================================================================================
@@ -72,15 +76,22 @@ rule_fit <- function(HPO_genes,
   #========================================================================================
   # Prepare the data: based on gtex or hcl, the respective internal data is chosen
   #========================================================================================
+
+
   if(type %in% "gtex"){
 
-  patho  <- patho_gtex
-  benign <- benign_gtex
+    patho  <- patho_gtex
+    benign <- benign_gtex
 
-  } else {
+  } else if (type %in% "hcl"){
     patho  <- patho_hcl
     benign <- benign_hcl
+
+  } else {
+    patho = user_patho
+    benign = user_benign
   }
+
 
 
   # Specify Pathogenic as the outcome
@@ -92,7 +103,7 @@ rule_fit <- function(HPO_genes,
     select(-c(CADD_raw_rankscore)) %>%
     rename(CADD_raw_rankscore = CADD_PHRED_SCORE) -> varpp_patho
 
-  # As the packages contains the hcl and gtex data, the column names are in a standardised
+  # As the packages contains the hcl and gtex data, the column names are in a standardized
   # order so the below arranges it correctly
   varpp_patho <- varpp_patho[,c(1,2,4,3,7:length(names(varpp_patho)))]
 
@@ -103,7 +114,7 @@ rule_fit <- function(HPO_genes,
     select(-c(CADD_raw_rankscore)) %>%
     rename(CADD_raw_rankscore = CADD_PHRED_SCORE) -> varpp_benign
 
-  # As the packages contains the hcl and gtex data, the column names are in a standardised
+  # As the packages contains the hcl and gtex data, the column names are in a standardized
   # order so the below arranges it correctly
   varpp_benign <- varpp_benign[,c(1,2,4,3,7:length(names(varpp_benign)))]
 
@@ -222,7 +233,7 @@ rule_fit <- function(HPO_genes,
   split_1     <- rule_dat[, -grep("rule", names(rule_dat))]
   split_2     <- rule_dat[, grep("rule", names(rule_dat))]
   split_2     <- split_2[, -caret::findCorrelation(cor(split_2))] # maybe just copy the code from caret?
-  rule_dat         <- cbind(split_1, split_2)
+  rule_dat    <- cbind(split_1, split_2)
 
   # This is the old function to simply remove duplicated rules.
   #rule_dat  <- rule_dat[!duplicated(as.list(rule_dat))]
@@ -397,11 +408,11 @@ rule_fit <- function(HPO_genes,
 
 
 
-#===========#
-#           #
-#  /(_M_)\  #
-# |       | #
-#  \/~V~\/  #
-#           #
-#===========#
+#=============#
+#             #
+#  /(__M__)\  #
+# |         | #
+#  \/~-V~-\/  #
+#             #
+#=============#
 

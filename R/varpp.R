@@ -3,7 +3,9 @@
 #' Based on the original VARPP paper, this algorithm is the parallelised and updated version of the model
 #'
 #' @param HPO_genes HPO term associated list of genes
-#' @param type the prediction data; either hcl (single cell) or gtex (tissue specific)
+#' @param type the prediction data; either hcl (single cell), gtex (tissue specific) or custom (requires the user to provide custom_patho and custom_benign).
+#' @param user_patho a user provided file for the pathogenic variants. This needs to have the following first few columns:Gene, GeneVariant, CADD_raw_rankscore, CADD_PHRED_SCORE, Pathogenic, gene_id,gene_biotype
+#' @param user_benign a user provided file for the benign variants. This needs to have the following first few columns:Gene, GeneVariant, CADD_raw_rankscore, CADD_PHRED_SCORE, Pathogenic, gene_id,gene_biotype
 #' @param ntree is the number of trees that should be built for ranger. It defaults to 1000
 #' @param max.depth is the maximum tree depth for the ranger trees. IT defaults to 3.
 #' @param cores number of cores for parallel, defaults to 4
@@ -17,7 +19,9 @@
 #' @importFrom iterators icount
 #' @export
 varpp <- function(HPO_genes,
-                  type = "gtex",
+                  type = c("gtex", "hcl", "custom"),
+                  user_patho = NULL,
+                  user_benign = NULL,
                   ntree = 500,
                   max.depth = NULL,
                   cores = 4){
@@ -50,9 +54,14 @@ varpp <- function(HPO_genes,
 
     patho  <- patho_gtex
     benign <- benign_gtex
-  } else {
+
+  } else if (type %in% "hcl"){
     patho  <- patho_hcl
     benign <- benign_hcl
+
+  } else {
+    patho = user_patho
+    benign = user_benign
   }
 
 
@@ -269,10 +278,12 @@ varpp <- function(HPO_genes,
 }
 
 
-#===========#
-#           #
-#  /(_M_)\  #
-# |       | #
-#  \/~V~\/  #
-#           #
-#===========#
+#=============#
+#             #
+#  /(__M__)\  #
+# |         | #
+#  \/~-V~-\/  #
+#             #
+#=============#
+
+
